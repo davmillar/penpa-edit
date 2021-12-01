@@ -2760,15 +2760,7 @@ class Puzzle {
         text += JSON.stringify(user_choices) + "\n";
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck");
         text += JSON.stringify(answersetting) + "\n";
 
         text += JSON.stringify("x") + "\n"; // Dummy, to match the size of maketext_duplicate
@@ -2813,15 +2805,7 @@ class Puzzle {
         }
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck_or");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck_or");
         text += JSON.stringify(answersetting) + "\n";
 
         // Save genre tags
@@ -2849,6 +2833,15 @@ class Puzzle {
             })
         }
         return url + "?m=edit&p=" + ba;
+    }
+
+    __get_answer_settings(classNameToCheck) {
+        var settingstatus = document.getElementById("answersetting").getElementsByClassName(classNameToCheck);
+        var answersetting = {};
+        for (var i = 0; i < settingstatus.length; i++) {
+            answersetting[settingstatus[i].id] = settingstatus[i].checked ? true : false;
+        }
+        return answersetting;
     }
 
     maketext_duplicate() {
@@ -2919,15 +2912,7 @@ class Puzzle {
         }
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck");
         text += JSON.stringify(answersetting) + "\n";
 
         if (this.mmode !== "solve") {
@@ -2972,15 +2957,7 @@ class Puzzle {
         this.pu_a_col.command_undo.__a = au;
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck_or");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck_or");
         text += JSON.stringify(answersetting) + "\n";
 
         // Save genre tags
@@ -3089,15 +3066,7 @@ class Puzzle {
         text += JSON.stringify(user_choices) + "\n";
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck");
         text += JSON.stringify(answersetting) + "\n";
 
         text += JSON.stringify("x") + "\n"; // Dummy, to match the size of maketext_duplicate
@@ -3128,15 +3097,7 @@ class Puzzle {
         this.pu_q_col.command_undo.__a = qu;
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck_or");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck_or");
         text += JSON.stringify(answersetting) + "\n";
 
         // Save genre tags
@@ -3215,15 +3176,7 @@ class Puzzle {
         text += JSON.stringify(user_choices) + "\n";
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck");
         text += JSON.stringify(answersetting) + "\n";
 
         text += JSON.stringify("x") + "\n"; // Dummy, to match the size of maketext_duplicate
@@ -3254,15 +3207,7 @@ class Puzzle {
         this.pu_q_col.command_undo.__a = qu;
 
         // save answer check settings
-        var settingstatus = document.getElementById("answersetting").getElementsByClassName("solcheck_or");
-        var answersetting = {};
-        for (var i = 0; i < settingstatus.length; i++) {
-            if (settingstatus[i].checked) {
-                answersetting[settingstatus[i].id] = true;
-            } else {
-                answersetting[settingstatus[i].id] = false;
-            }
-        }
+        var answersetting = __get_answer_settings("solcheck_or");
         text += JSON.stringify(answersetting) + "\n";
 
         // Save genre tags
