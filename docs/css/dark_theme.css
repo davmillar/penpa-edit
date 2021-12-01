@@ -210,10 +210,6 @@ header,
     color: var(--white);
 }
 
-.solutiontext {
-    color: var(--white);
-}
-
 .tooltip .tooltiptext {
     background-color: var(--greyDarkVery);
     color: var(--white);
