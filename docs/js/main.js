@@ -1970,7 +1970,7 @@ onload = function() {
             pu.set_allmodes("inline-block");
         } else {
             // Remove all modes, default is none
-            pu.set_allmodes();
+            pu.set_allmodes("none");
 
             // Display generic ones
             for (var i of penpa_constraints["setting"]["general"]) {

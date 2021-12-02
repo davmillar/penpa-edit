@@ -171,52 +171,54 @@ class Puzzle {
 
         // Object and Array initialization
         for (var i of pu_qa) {
-            this[i] = {};
-            this[i].command_redo = new Stack();
-            this[i].command_undo = new Stack();
-            this[i].surface = {};
-            this[i].number = {};
-            this[i].numberS = {};
-            this[i].symbol = {};
-            this[i].freeline = {};
-            this[i].freelineE = {};
-            this[i].thermo = [];
-            this[i].arrows = [];
-            this[i].direction = [];
-            this[i].squareframe = [];
-            this[i].polygon = [];
-            this[i].line = {};
-            this[i].lineE = {};
-            this[i].wall = {};
-            this[i].cage = {};
-            this[i].deletelineE = {};
-            this[i].killercages = [];
-            this[i].nobulbthermo = [];
+            this[i] = {
+                command_redo: new Stack(),
+                command_undo: new Stack(),
+                surface: {},
+                number: {},
+                numberS: {},
+                symbol: {},
+                freeline: {},
+                freelineE: {},
+                thermo: [],
+                arrows: [],
+                direction: [],
+                squareframe: [],
+                polygon: [],
+                line: {},
+                lineE: {},
+                wall: {},
+                cage: {},
+                deletelineE: {},
+                killercages: [],
+                nobulbthermo: []
+            };
         }
 
         // Object and Array initialization for custom colors
         for (var i of pu_qa_col) {
-            this[i] = {};
-            this[i].command_redo = new Stack();
-            this[i].command_undo = new Stack();
-            this[i].surface = {};
-            this[i].number = {};
-            this[i].numberS = {};
-            this[i].symbol = {};
-            this[i].freeline = {};
-            this[i].freelineE = {};
-            this[i].thermo = [];
-            this[i].arrows = [];
-            this[i].direction = [];
-            this[i].squareframe = [];
-            this[i].polygon = [];
-            this[i].line = {};
-            this[i].lineE = {};
-            this[i].wall = {};
-            this[i].cage = {};
-            this[i].deletelineE = {};
-            this[i].killercages = [];
-            this[i].nobulbthermo = [];
+            this[i] = {
+                command_redo: new Stack(),
+                command_undo: new Stack(),
+                surface: {},
+                number: {},
+                numberS: {},
+                symbol: {},
+                freeline: {},
+                freelineE: {},
+                thermo: [],
+                arrows: [],
+                direction: [],
+                squareframe: [],
+                polygon: [],
+                line: {},
+                lineE: {},
+                wall: {},
+                cage: {},
+                deletelineE: {},
+                killercages: [],
+                nobulbthermo: []
+            };
         }
 
         this.frame = {};
@@ -225,50 +227,52 @@ class Puzzle {
     }
 
     reset_board() {
-        this[this.mode.qa] = {};
-        this[this.mode.qa].command_redo = new Stack();
-        this[this.mode.qa].command_undo = new Stack();
-        this[this.mode.qa].surface = {};
-        this[this.mode.qa].number = {};
-        this[this.mode.qa].numberS = {};
-        this[this.mode.qa].symbol = {};
-        this[this.mode.qa].freeline = {};
-        this[this.mode.qa].freelineE = {};
-        this[this.mode.qa].thermo = [];
-        this[this.mode.qa].arrows = [];
-        this[this.mode.qa].direction = [];
-        this[this.mode.qa].squareframe = [];
-        this[this.mode.qa].polygon = [];
-        this[this.mode.qa].line = {};
-        this[this.mode.qa].lineE = {};
-        this[this.mode.qa].wall = {};
-        this[this.mode.qa].cage = {};
-        this[this.mode.qa].deletelineE = {};
-        this[this.mode.qa].killercages = [];
-        this[this.mode.qa].nobulbthermo = [];
+        this[this.mode.qa] = {
+            command_redo: new Stack(),
+            command_undo: new Stack(),
+            surface: {},
+            number: {},
+            numberS: {},
+            symbol: {},
+            freeline: {},
+            freelineE: {},
+            thermo: [],
+            arrows: [],
+            direction: [],
+            squareframe: [],
+            polygon: [],
+            line: {},
+            lineE: {},
+            wall: {},
+            cage: {},
+            deletelineE: {},
+            killercages: [],
+            nobulbthermo: []
+        };
 
         // Object and Array initialization for custom colors
-        this[this.mode.qa + "_col"] = {};
-        this[this.mode.qa + "_col"].command_redo = new Stack();
-        this[this.mode.qa + "_col"].command_undo = new Stack();
-        this[this.mode.qa + "_col"].surface = {};
-        this[this.mode.qa + "_col"].number = {};
-        this[this.mode.qa + "_col"].numberS = {};
-        this[this.mode.qa + "_col"].symbol = {};
-        this[this.mode.qa + "_col"].freeline = {};
-        this[this.mode.qa + "_col"].freelineE = {};
-        this[this.mode.qa + "_col"].thermo = [];
-        this[this.mode.qa + "_col"].arrows = [];
-        this[this.mode.qa + "_col"].direction = [];
-        this[this.mode.qa + "_col"].squareframe = [];
-        this[this.mode.qa + "_col"].polygon = [];
-        this[this.mode.qa + "_col"].line = {};
-        this[this.mode.qa + "_col"].lineE = {};
-        this[this.mode.qa + "_col"].wall = {};
-        this[this.mode.qa + "_col"].cage = {};
-        this[this.mode.qa + "_col"].deletelineE = {};
-        this[this.mode.qa + "_col"].killercages = [];
-        this[this.mode.qa + "_col"].nobulbthermo = [];
+        this[this.mode.qa + "_col"] = {
+            command_redo: new Stack(),
+            command_undo: new Stack(),
+            surface: {},
+            number: {},
+            numberS: {},
+            symbol: {},
+            freeline: {},
+            freelineE: {},
+            thermo: [],
+            arrows: [],
+            direction: [],
+            squareframe: [],
+            polygon: [],
+            line: {},
+            lineE: {},
+            wall: {},
+            cage: {},
+            deletelineE: {},
+            killercages: [],
+            nobulbthermo: []
+        };
     }
 
     reset_arr() {
@@ -2163,10 +2167,10 @@ class Puzzle {
         this.mode[this.mode.qa].edit_mode = mode;
         this.submode_reset();
         if (document.getElementById('mode_' + mode)) {
-            document.getElementById('mode_' + mode).style.display = 'inline-block';
+            document.getElementById('mode_' + mode).style.display = 'grid';
         }
         if (document.getElementById('style_' + mode)) {
-            document.getElementById('style_' + mode).style.display = 'inline-block';
+            document.getElementById('style_' + mode).style.display = 'grid';
         }
         document.getElementById('mo_' + mode).checked = true;
         this.submode_check('sub_' + mode + this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
@@ -2544,7 +2548,9 @@ class Puzzle {
     }
 
     reset_selectedmode() {
-        switch (this.mode[this.mode.qa].edit_mode) {
+        let currentMode = this.mode[this.mode.qa];
+        let editMode = currentMode.edit_mode;
+        switch (editMode) {
             case "surface":
                 this[this.mode.qa].surface = {};
                 if (document.getElementById("custom_color_opt").value === "2") {
@@ -2552,7 +2558,7 @@ class Puzzle {
                 }
                 break;
             case "line":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "4") {
+                if (currentMode[editMode][0] != "4") {
                     for (var i in this[this.mode.qa].line) {
                         if (this[this.mode.qa].line[i] !== 98) {
                             delete this[this.mode.qa].line[i];
@@ -2577,7 +2583,7 @@ class Puzzle {
                 }
                 break;
             case "lineE":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (currentMode[editMode][0] === "4") {
                     for (var i in this[this.mode.qa].lineE) {
                         if (this[this.mode.qa].lineE[i] === 98) {
                             delete this[this.mode.qa].lineE[i];
@@ -2586,7 +2592,7 @@ class Puzzle {
                             }
                         }
                     }
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "5") {
+                } else if (currentMode[editMode][0] === "5") {
                     this[this.mode.qa].deletelineE = {};
                     if (document.getElementById("custom_color_opt").value === "2") {
                         this[this.mode.qa + "_col"].deletelineE = {};
@@ -2613,8 +2619,8 @@ class Puzzle {
                 }
                 break;
             case "number":
-                if ((this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") ||
-                    (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "9")) {
+                if ((currentMode[editMode][0] === "3") ||
+                    (currentMode[editMode][0] === "9")) {
                     this[this.mode.qa].numberS = {};
                 } else {
                     this[this.mode.qa].number = {};
@@ -2627,7 +2633,7 @@ class Puzzle {
                 }
                 break;
             case "sudoku":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+                if (currentMode[editMode][0] === "3") {
                     if (!isEmpty(this[this.mode.qa].number)) {
                         let keys = Object.keys(this[this.mode.qa].number);
                         for (var k = 0; k < keys.length; k++) {
@@ -2636,7 +2642,7 @@ class Puzzle {
                             }
                         }
                     }
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                } else if (currentMode[editMode][0] === "2") {
                     this[this.mode.qa].numberS = {};
                 } else {
                     this[this.mode.qa].number = {};
@@ -2649,45 +2655,29 @@ class Puzzle {
                 }
                 break;
             case "special":
-                this[this.mode.qa][this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]] = [];
+                this[this.mode.qa][currentMode[editMode][0]] = [];
                 if (document.getElementById("custom_color_opt").value === "2") {
-                    this[this.mode.qa + "_col"][this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]] = [];
+                    this[this.mode.qa + "_col"][currentMode[editMode][0]] = [];
                 }
                 break;
             case "combi":
-                switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
+                switch (currentMode[editMode][0]) {
                     case "tents":
-                        break;
                     case "linex":
-                        break;
                     case "edgex":
-                        break;
                     case "edgexoi":
-                        break;
                     case "blpo":
-                        break;
                     case "blwh":
-                        break;
                     case "battleship":
-                        break;
                     case "star":
-                        break;
                     case "magnets":
-                        break;
                     case "lineox":
-                        break;
                     case "yajilin":
-                        break;
                     case "hashi":
-                        break;
                     case "arrowS":
-                        break;
                     case "shaka":
-                        break;
                     case "numfl":
-                        break;
                     case "alfl":
-                        break;
                     case "edgesub":
                         break;
                 }
@@ -8313,21 +8303,22 @@ class Puzzle {
 
     re_linemoveE(num) {
         if (this.drawing && this.last != num) {
-            var line_style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
+            var editMode = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode];
+            var line_style = editMode[1];
             var array;
-            if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "1") {
+            if (editMode[0] === "1") {
                 if (this.point[num].adjacent.indexOf(parseInt(this.last)) != -1) {
                     array = "lineE";
                     var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
                     this.re_line(array, key, line_style);
                 }
-            } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+            } else if (editMode[0] === "2") {
                 if (this.point[num].adjacent.indexOf(parseInt(this.last)) != -1 || this.point[num].adjacent_dia.indexOf(parseInt(this.last)) != -1) {
                     array = "lineE";
                     var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
                     this.re_line(array, key, line_style);
                 }
-            } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "5") {
+            } else if (editMode[0] === "5") {
                 if (this.point[num].adjacent.indexOf(parseInt(this.last)) != -1) {
                     array = "deletelineE";
                     var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
@@ -11418,36 +11409,27 @@ class Puzzle {
         for (var j = r_start; j < (size + r_start); j++) { //  row
             for (var i = c_start; i < (size + c_start); i++) { // column
 
+                var testValueOne = this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)];
+                var testValueTwo = this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)];
+                var ifcondition = [];
                 if (document.getElementById("ignore_pencilmarks").checked) {
-                    var ifcondition = [this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)] &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "2") &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "4") &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "5") &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "6") &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "10"),
-                    this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)] &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "2") &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "4") &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "5") &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "6") &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "10")
+                    ifcondition = [
+                        testValueOne && (testValueOne[2] !== "2") && (testValueOne[2] !== "4") && (testValueOne[2] !== "5") && (testValueOne[2] !== "6") && (testValueOne[2] !== "10"),
+                        testValueTwo && (testValueTwo[2] !== "2") && (testValueTwo[2] !== "4") && (testValueTwo[2] !== "5") && (testValueTwo[2] !== "6") && (testValueTwo[2] !== "10")
                     ];
                 } else {
-                    var ifcondition = [this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)] &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "2") &&
-                        (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "4"),
-                    this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)] &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "2") &&
-                    (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] !== "4")
+                    ifcondition = [
+                        testValueOne && (testValueOne[2] !== "2") && (testValueOne[2] !== "4"),
+                        testValueTwo && (testValueTwo[2] !== "2") && (testValueTwo[2] !== "4")
                     ];
                 }
 
                 if (ifcondition[0]) {
-                    if (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][2] === "7") {
+                    if (testValueOne[2] === "7") {
                         var sum = 0,
                             a;
                         for (var k = 0; k < 10; k++) {
-                            if (this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][0][k] === 1) {
+                            if (testValueOne[0][k] === 1) {
                                 sum += 1;
                                 a = k + 1;
                             }
@@ -11458,18 +11440,18 @@ class Puzzle {
                             outputstring += '0';
                         }
                     } else {
-                        if (isNaN(parseInt(this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][0]))) {
+                        if (isNaN(parseInt(testValueOne[0]))) {
                             outputstring += '0';
                         } else {
-                            outputstring += this[mode_order[0]].number[(i + 2) + ((j + 2) * this.nx0)][0];
+                            outputstring += testValueOne[0];
                         }
                     }
                 } else if (ifcondition[1]) {
-                    if (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][2] === "7") {
+                    if (testValueTwo[2] === "7") {
                         var sum = 0,
                             a;
                         for (var k = 0; k < (size + 1); k++) {
-                            if (this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][0][k] === 1) {
+                            if (testValueTwo[0][k] === 1) {
                                 sum += 1;
                                 a = k + 1;
                             }
@@ -11480,10 +11462,10 @@ class Puzzle {
                             outputstring += '0';
                         }
                     } else {
-                        if (isNaN(parseInt(this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][0]))) {
+                        if (isNaN(parseInt(testValueTwo[0]))) {
                             outputstring += '0';
                         } else {
-                            outputstring += this[mode_order[1]].number[(i + 2) + ((j + 2) * this.nx0)][0];
+                            outputstring += testValueTwo[0];
                         }
                     }
                 } else {
@@ -11543,41 +11525,46 @@ class Puzzle {
         return "rgba(" + Math.round(customcolor._r) + "," + Math.round(customcolor._g) + "," + Math.round(customcolor._b) + "," + customcolor._a + ")";
     }
 
-    set_allmodes(displaytype = "none") {
-        for (var i of penpa_modes["square"]['mode']) {
+    set_allmodes(displaytype, mode) {
+        displaytype = displaytype || "none";
+        mode = mode || "square";
+
+        var modeSettings = penpa_modes[mode];
+
+        for (var i of modeSettings.mode) {
             document.getElementById("mo_" + i + "_lb").style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['sub']) {
+        for (var i of modeSettings.sub) {
             document.getElementById("sub_" + i + "_lb").style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['customcolor']) {
+        for (var i of modeSettings.customcolor) {
             document.getElementById(i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['ms']) {
+        for (var i of modeSettings.ms) {
             document.getElementById("ms_" + i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['ms1']) {
+        for (var i of modeSettings.ms1) {
             document.getElementById("ms1_" + i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['ms3']) {
+        for (var i of modeSettings.ms3) {
             document.getElementById("ms3_" + i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['shapemodes']) {
+        for (var i of modeSettings.shapemodes) {
             document.getElementById(i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['combisub']) {
+        for (var i of modeSettings.combisub) {
             document.getElementById("combisub_" + i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['subcombi']) {
+        for (var i of modeSettings.subcombi) {
             document.getElementById(i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['top_buttons']) {
+        for (var i of modeSettings.top_buttons) {
             document.getElementById(i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['exceptions']) {
+        for (var i of modeSettings.exceptions) {
             document.getElementById(i).style.display = displaytype;
         }
-        for (var i of penpa_modes["square"]['li']) {
+        for (var i of modeSettings.li) {
             document.getElementById("li_" + i).style.display = displaytype;
         }
     }

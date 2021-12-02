@@ -36,71 +36,44 @@ class Puzzle_tri extends Puzzle {
     erase_buttons() {
         // One time operation when the grid is created
         // Remove all modes, square grid is the reference as it has all the modes
-        for (var i of penpa_modes["square"]['mode']) {
-            document.getElementById("mo_" + i + "_lb").style.display = "none";
+        if (this.gridtype !== 'square') {
+            pu.set_allmodes('none');
         }
-        for (var i of penpa_modes["square"]['sub']) {
-            document.getElementById("sub_" + i + "_lb").style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['customcolor']) {
-            document.getElementById(i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['ms']) {
-            document.getElementById("ms_" + i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['ms1']) {
-            document.getElementById("ms1_" + i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['ms3']) {
-            document.getElementById("ms3_" + i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['shapemodes']) {
-            document.getElementById(i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['combisub']) {
-            document.getElementById("combisub_" + i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['subcombi']) {
-            document.getElementById(i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['top_buttons']) {
-            document.getElementById(i).style.display = "none";
-        }
-        for (var i of penpa_modes["square"]['exceptions']) {
-            document.getElementById(i).style.display = "none";
-        }
+
         // Add all modes only applicable to this grid type
-        for (var i of penpa_modes[this.gridtype]['mode']) {
+        let currentTypeSettings = penpa_modes[this.gridtype];
+
+        for (var i of currentTypeSettings.mode) {
             document.getElementById("mo_" + i + "_lb").style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['sub']) {
+        for (var i of currentTypeSettings.sub) {
             document.getElementById("sub_" + i + "_lb").style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['customcolor']) {
+        for (var i of currentTypeSettings.customcolor) {
             document.getElementById(i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['ms']) {
+        for (var i of currentTypeSettings.ms) {
             document.getElementById("ms_" + i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['ms1']) {
+        for (var i of currentTypeSettings.ms1) {
             document.getElementById("ms1_" + i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['ms3']) {
+        for (var i of currentTypeSettings.ms3) {
             document.getElementById("ms3_" + i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['shapemodes']) {
+        for (var i of currentTypeSettings.shapemodes) {
             document.getElementById(i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['combisub']) {
+        for (var i of currentTypeSettings.combisub) {
             document.getElementById("combisub_" + i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['subcombi']) {
+        for (var i of currentTypeSettings.subcombi) {
             document.getElementById(i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['top_buttons']) {
+        for (var i of currentTypeSettings.top_buttons) {
             document.getElementById(i).style.display = "inline-block";
         }
-        for (var i of penpa_modes[this.gridtype]['exceptions']) {
+        for (var i of currentTypeSettings.exceptions) {
             document.getElementById(i).style.display = "inline-block";
         }
     }

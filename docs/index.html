@@ -130,7 +130,6 @@
                         <span id="visibility_button" class="label">ON</span>
                     </div>
                     <div id="mode_button" class="mode_button">
-                        <label class="label_mode" id="mode_txt">Mode:</label>
                         <input type="radio" name="mode" id="mo_surface" checked="checked" />
                         <label for="mo_surface" class="label" id="mo_surface_lb">Surface</label>
                         <input type="radio" name="mode" id="mo_line" />
@@ -473,7 +472,7 @@
                         <span>
                             <label class="label_mode tooltip" id="style_txt">Style:<span id="style_text" class="tooltiptext">Choose one style</span></label>
                         </span>
-                        <span id="style_surface" style="display:'inline-block';">
+                        <span id="style_surface" style="display:grid;">
                             <!-- Adding superscript was affecting the color selection as it did not had id, so defined new id and followed same structure as parent. Its important to have only two characters at the end after _ because of the way, window_click is setup in main.js for stylemode_check-->
                             <input type="radio" name="style_surface" value="1" id="st_surface1" checked="checked">
                             <label for="st_surface1" class="labelL" id="st_surface1_lb">DG<sup id="st_surface1_sp">1</sup></label>
@@ -1397,9 +1396,9 @@
                             </select>
                         </td>
                     </tr>
-                    <tr>
+                    <tr id="save_settings_lb">
                         <td>
-                            <h4><label id="save_settings_lb">Save Settings:</label></h4>
+                            <label>Save Settings:</label>
                         </td>
                         <td>
                             <select name="save_settings" id="save_settings_opt">

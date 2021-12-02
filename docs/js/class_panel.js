@@ -85,15 +85,13 @@ class Panel {
         document.getElementById("float-key-board").style.display = "inline";
         document.getElementById("float-key-text").style.display = "none";
         if (pu.mode[pu.mode.qa].edit_mode === "number") {
+            let skipFloater = false;
             switch (this.panelmode) {
                 case "Text":
                     this.nxf = 4;
                     this.nyf = 3;
                     this.sizef = 36;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     document.getElementById("float-key-text").style.display = "inline";
                     document.getElementById("float-key-board").style.display = "none";
                     break;
@@ -102,9 +100,6 @@ class Panel {
                     this.nyf = 3;
                     this.sizef = 50;
                     this.canvas_size_setting(65);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "\u{232B}", "\u{2421}"];
                     this.draw_number();
                     break;
@@ -113,9 +108,6 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 36;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
                         "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "!", "?", "\u{2423}", "\u{2421}"
                     ];
@@ -126,9 +118,6 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 36;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
                         "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "!", "?", "\u{2423}", "\u{2421}"
                     ];
@@ -139,9 +128,6 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 36;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "!?#$%&()[]+－×＊/÷＝\u{221E}^<>～|@;:,._   "
                     this.cont = this.str.split("");
                     this.draw_number();
@@ -151,9 +137,6 @@ class Panel {
                     this.nyf = 9;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモ" +
                         "ヤユヨ　　ラリルレロワヲン　　ガギグゲゴザジズゼゾダヂヅデドバビブベボパピプペポァィゥェォャュョッ　ー。、「」"
                     this.cont = this.str.split("");
@@ -164,9 +147,6 @@ class Panel {
                     this.nyf = 9;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめも" +
                         "やゆよ　　らりるれろわをん　　がぎぐげござじずぜぞだぢづでどばびぶべぼぱぴぷぺぽぁぃぅぇぉゃゅょっ　ー。、「」"
                     this.cont = this.str.split("");
@@ -177,9 +157,6 @@ class Panel {
                     this.nyf = 9;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "黒白灰緑赤青黄水数独偶奇大中小上下左右　同違長短縦横行列遠近高低以央最各交差方向" +
                         "一二三四五六七八九十壁領域部屋点線輪　　書含入出通切曲直進問丸角形例題解答正誤図計算言葉文字盤面矢印"
                     this.cont = this.str.split("");
@@ -190,9 +167,6 @@ class Panel {
                     this.nyf = 4;
                     this.sizef = 36;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫⅰⅱⅲⅳⅴⅵⅶⅷⅸⅹⅺⅻ";
                     this.cont = this.str.split("");
                     this.draw_number();
@@ -202,9 +176,6 @@ class Panel {
                     this.nyf = 6;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυϕχψω";
                     this.cont = this.str.split("");
                     this.draw_number();
@@ -214,9 +185,6 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ   ";
                     this.cont = this.str.split("");
                     this.draw_number();
@@ -226,9 +194,6 @@ class Panel {
                     this.nyf = 6;
                     this.sizef = 28;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "ÄÖÜäöüßÑñÉÀÈÙÂÊÎÔÛËÏÜÇŒÆéàèùâêîôûëïüçœæ   ";
                     this.cont = this.str.split("");
                     this.draw_number();
@@ -238,9 +203,6 @@ class Panel {
                     this.nyf = 8;
                     this.sizef = 32;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "♔♕♖♗♘♙♚♛♜♝♞♟☖☗歩角飛香桂銀金王玉と龍馬杏圭全成帥俥傌炮仕相兵將車馬砲士象卒　　　　";
                     this.cont = this.str.split("");
                     this.draw_unicodesymbol();
@@ -250,20 +212,26 @@ class Panel {
                     this.nyf = 6;
                     this.sizef = 32;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.str = "♤♡♢♧♠♥♦♣A2345678910JQK  ";
                     this.cont = this.str.split("");
                     this.draw_unicodesymbol();
                     break;
+                default:
+                    skipFloater = true;
+                    break;
+            }
+
+            if (!skipFloater) {
+                this.fkb.style.paddingTop = "0";
+                this.fkb.style.display = "block";
+                this.fkm.style.display = "flex";
             }
         } else if (pu.mode[pu.mode.qa].edit_mode === "symbol") {
             this.nxf = 4;
             this.nyf = 3;
             this.sizef = 50;
             this.canvas_size_setting(5);
-            this.fkb.style.paddingTop = "40px";
+            this.fkb.style.paddingTop = "30px";
             this.fkb.style.display = "block";
             this.fkm.style.display = "none";
 
@@ -295,15 +263,13 @@ class Panel {
                 this.ctxf.strokeRect((i_n % this.nxf) * (this.sizef + this.spacef), (i_n / this.nxf | 0) * (this.sizef + this.spacef), this.sizef, this.sizef);
             }
         } else if (pu.mode[pu.mode.qa].edit_mode === "sudoku") {
+            let skipFloater = false;
             switch (this.panelmode) {
                 case "number":
                     this.nxf = 4;
                     this.nyf = 3;
                     this.sizef = 50;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0, "\u{232B}", "\u{2421}"];
                     this.draw_number();
                     break;
@@ -312,9 +278,6 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 40;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O",
                         "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "", "", "\u{2423}", "\u{2421}"
                     ];
@@ -325,14 +288,20 @@ class Panel {
                     this.nyf = 5;
                     this.sizef = 40;
                     this.canvas_size_setting(canvas_size_setting_constant);
-                    this.fkb.style.paddingTop = "0px";
-                    this.fkb.style.display = "block";
-                    this.fkm.style.display = "flex";
                     this.cont = ["a", "b", "", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
                         "p", "q", "r", "s", "t", "u", "", "w", "", "y", "", "", "", "\u{2423}", "\u{2421}"
                     ];
                     this.draw_number();
                     break;
+                default:
+                    skipFloater = true;
+                    break;
+            }
+
+            if (!skipFloater) {
+                this.fkb.style.paddingTop = "0";
+                this.fkb.style.display = "block";
+                this.fkm.style.display = "flex";
             }
         } else {
             this.fkb.style.display = "none";

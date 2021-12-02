@@ -6,6 +6,7 @@
     --blackLight: #232323;
     --blue: #0000ff;
     --blueDark: #1e50a2;
+    --blueDarkVery: #0f2f63;
     --blueLight: #187bcd;
     --blueLightMedium: #4795d4;
     --blueLightVery: #c0e0ff;
@@ -38,7 +39,12 @@
     --bgPage: var(--greyLightVery);
     --bgMain: var(--white);
     --bgMedium: var(--greyLightMedium);
+    --bgLite: var(--greyLight);
     --fgMain: var(--black);
+    --fgLite: var(--greyDarkVery);
+    --blueAccent: var(--blueLightVery);
+    --blueContrast: var(--blueDark);
+    --fgContrast: var(--white);
 }
 
 .solving,
@@ -64,6 +70,9 @@
 .button.sw {
     background-color: var(--blueLight);
     color: var(--white);
+}
+.button.sw:hover {
+    background-color: var(--blueDark);
 }
 
 .label_mode {
@@ -154,10 +163,6 @@
     background-color: var(--white);
 }
 
-#float-key-header {
-    background: var(--grey);
-}
-
 #float-key-body {
     box-shadow: 4px 4px 4px var(--transparent40);
     background: var(--greyLightMedium);
@@ -194,6 +199,7 @@
 }
 
 header,
+#float-key-header,
 .modal-header,
 .modal-subheader {
     background: var(--greyLight);

@@ -20,6 +20,7 @@
 }
 
 body {
+    font-family:Arial, Helvetica, sans-serif;
     font-size: 16px;
     margin: 1.5em auto 3em;
     background: var(--bgPage);
@@ -52,6 +53,13 @@ header,
     bottom: 0;
     height: 3em;
     line-height: 3em;
+}
+
+.button.sw {
+    border:0;
+    border-radius: 1em;
+    text-transform: uppercase;
+    padding: .3em .5em;
 }
 
 header {
@@ -228,32 +236,33 @@ hr.newgridhrline {
 #submode_button label,
 #stylemode_button label {
     font-size: 14px;
+    margin:2px;
+}
+
+#submode_button span {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(4.5em, 1fr));
+}
+
+#stylemode_button span {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(3.5em, 1fr));
 }
 
 .label_mode {
-    display: inline;
-    margin: 0px;
-    width: 110px;
-    height: 25px;
-    padding-left: 5px;
-    padding-right: 5px;
-    margin-left: 5px;
-    font-size: 14px;
+    display: none;
+    margin: 2px;
     text-align: center;
-    line-height: 28px;
 }
 
-.label {
+.label,
+.labelL {
     display: inline-block;
-    margin: 0px;
-    height: 25px;
-    padding-left: 5px;
-    padding-right: 5px;
-    margin-left: 5px;
-    margin-bottom: 5px;
-    font-size: 14px;
+    margin: .2em;
+    padding: .2em .5em;
+    font-size: .75em;
     text-align: center;
-    line-height: 28px;
+    line-height: 1.2em;
     border-radius: 3px;
 }
 
@@ -264,19 +273,6 @@ hr.newgridhrline {
     padding-left: 5px;
     padding-right: 5px;
     margin-left: 5px;
-    margin-bottom: 5px;
-    font-size: 14px;
-    text-align: center;
-    line-height: 28px;
-    border-radius: 3px;
-}
-
-.labelL {
-    display: inline-block;
-    margin: 0px;
-    height: 25px;
-    padding-left: 5px;
-    padding-right: 5px;
     margin-bottom: 5px;
     font-size: 14px;
     text-align: center;
@@ -550,6 +546,30 @@ input[type="radio"]:checked+label {
     box-shadow: 0 0 0 1px var(--orange);
 }
 
+#mode_button input[type="radio"]+label {
+    border: 0;
+    background: var(--bgPage);
+    color: var(--fgMain);
+    border-radius: 1.25em;
+    text-transform: uppercase;
+    font-size: .8em;
+    line-height: 2.3em;
+    letter-spacing: .1em;
+    margin: .2em;
+    padding: .2em 1em 0 !important;
+    height: auto;
+}
+
+#mode_button input[type="radio"]+label:hover {
+    background: var(--bgMain);
+}
+
+#mode_button input[type="radio"]:checked+label {
+    background: var(--blueContrast) !important;
+    color: var(--fgContrast);
+    box-shadow: none;
+}
+
 body input,
 body textarea {
     -webkit-touch-callout: text;
@@ -580,12 +600,9 @@ body textarea {
 
 .nav {
     position: relative;
-    display: flex;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     z-index: 1;
-    width: auto;
-    height: 25px;
     margin: 0 auto;
     padding: 0;
 }
@@ -714,11 +731,9 @@ body textarea {
 }
 
 #float-key-header {
-    width: 200px;
-    height: 40px;
     text-align: center;
-    padding-top: 0px;
-    border-radius: 5px 5px 0px 0px;
+    padding: 5px 0;
+    border-radius: 5px 5px 0 0;
     cursor: move;
 }
 
@@ -726,10 +741,10 @@ body textarea {
     position: relative;
     width: 200px;
     height: 140px;
-    margin-top: 0px;
+    margin-top: 0;
     text-align: center;
-    padding-top: 0px;
-    border-radius: 5px 5px 5px 5px;
+    padding-top: 0;
+    border-radius: 5px;
 }
 
 #float-key-menu {
@@ -1274,7 +1289,7 @@ sup {
     margin-left: -7px;
 }
 
-/* @media (min-width: 850px) {
+@media (min-width: 850px) {
     #app-container {
         display:grid;
         grid-template-columns: 1fr 225px 600px 1fr;
@@ -1289,4 +1304,4 @@ sup {
         width: auto;
         height: auto;
     }
-} */
+}
