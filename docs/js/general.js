@@ -911,22 +911,16 @@ function advancecontrol_onoff(loadtype = "new") {
     if (document.getElementById('advance_button').value === "2") {
         // Lite Version OFF, Display all the modes
         // Display the mode break line again
-        document.getElementById("mode_break").style.display = "inline";
-        document.getElementById("mode_txt_space").style.display = "inline";
         advancecontrol_on();
     } else {
         // Lite Version ON, so turn off extra modes
         if (loadtype === "url") {
             // Remove the mode break line again
-            document.getElementById("mode_break").style.display = "none";
-            document.getElementById("mode_txt_space").style.display = "none";
             advancecontrol_off(loadtype);
         } else {
             let user_choices = getValues('mode_choices');
             if (user_choices.length !== 0) {
                 // Remove the mode break line again
-                document.getElementById("mode_break").style.display = "none";
-                document.getElementById("mode_txt_space").style.display = "none";
                 advancecontrol_off(loadtype);
             } else {
                 document.getElementById('advance_button').value = "2";
@@ -2923,8 +2917,6 @@ function decode_puzzlink(url) {
 
     // Set PenpaLite
     document.getElementById('advance_button').value = "1";
-    document.getElementById("mode_break").style.display = "none";
-    document.getElementById("mode_txt_space").style.display = "none";
     advancecontrol_off("url");
 
     var tabSelect = document.querySelector('ul.multi');

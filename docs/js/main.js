@@ -1953,10 +1953,6 @@ onload = function() {
     document.getElementById("constraints_settings_opt").onchange = function() {
         let current_constraint = document.getElementById("constraints_settings_opt").value;
         if (current_constraint === "all") {
-            // Display the mode break line
-            document.getElementById("mode_break").style.display = "inline";
-            document.getElementById("mode_txt_space").style.display = "inline";
-
             // set the default submode
             for (let i = 0; i < penpa_constraints["setting"][current_constraint]["modeset"].length; i++) {
                 let modeset = penpa_constraints["setting"][current_constraint]["modeset"][i];
@@ -1975,10 +1971,6 @@ onload = function() {
         } else {
             // Remove all modes, default is none
             pu.set_allmodes();
-
-            // Remove the mode break line
-            document.getElementById("mode_break").style.display = "none";
-            document.getElementById("mode_txt_space").style.display = "none";
 
             // Display generic ones
             for (var i of penpa_constraints["setting"]["general"]) {
