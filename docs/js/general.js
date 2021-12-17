@@ -439,17 +439,16 @@ function savetext_download(){
     }
   }
   if(valid_name){
-    if (ua.indexOf('safari') !== -1 && ua.indexOf('chrome') === -1 && ua.indexOf('edge') === -1){
-      //safari
-      window.open('data:text/plain;base64,' + window.Base64.encode(text), '_blank');
-    }else if (window.navigator.msSaveBlob) {
+    if (window.navigator.msSaveBlob) {
       // for IE
       window.navigator.msSaveBlob(blob, filename);
-    }else{
+    } else if (URL && URL.createObjectURL) {
       downloadLink.href = URL.createObjectURL(blob);
       downloadLink.target = "_blank";
       downloadLink.download = filename;
       downloadLink.click();
+    } else {
+      alert("This browser does not support SVG export.");
     }
   }else{
     alert("The characters \\/:*?\"<>| cannot be used in filename");
