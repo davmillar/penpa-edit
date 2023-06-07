@@ -9,7 +9,7 @@ If the message "Invalid address" is displayed on a supported browser, try cleari
 Depending on the browser you can update the page without using the cache with "Ctrl" + "R", "Ctrl" + "F5", "Shift" + "F5", etc.
 
 ## Referencing and citing content
-You can now site this in your research and publications using:
+You can now cite this in your research and publications using:
 [![DOI](https://zenodo.org/badge/270875169.svg)](https://zenodo.org/badge/latestdoi/270875169)
 
 ## Sample Preview of the possibilities of this tool
@@ -269,6 +269,9 @@ You can now site this in your research and publications using:
 3. Cancel: Close the window
 
 ### Share
+
+#### Settings for Output
+
 * Title - Describe the Puzzle Type (e.g. Classic Sudoku, Arrow Sudoku)
 
 * Author - Puzzle creator's name
@@ -276,172 +279,183 @@ You can now site this in your research and publications using:
 * Rules - Enter rules here
 
 * Genre/Tags - Select specific tags that suit your puzzle. These tags will be used for smart answer checking features. The smart checking supports following tags (Under development):
-1. Classic Sudoku (9x9)
-2. Consecutive Sudoku
-3. Nonconsecutive Sudoku
-4. Consecutive Pairs Sudoku
-5. Star Battle
-6. TomTom
-7. Arrow/Thermo/Even/Odd/Killer (Only Classic Check, 9x9)
+	1. Classic Sudoku (9x9)
+	2. Consecutive Sudoku
+	3. Nonconsecutive Sudoku
+	4. Consecutive Pairs Sudoku
+	5. Star Battle
+	6. TomTom
+	7. Arrow/Thermo/Even/Odd/Killer (Only Classic Check, 9x9)
 
 * Source - If you are not the author of the puzzle, specify the source URL
 
 * Save Undo/Redo (History) - If you checkmark this option, then your action history will be saved in the URL. This is effective only while using "URL for editing" button. Other options will automatically ignore history. Note: Saving history might make URL too big depending on your usage.
 
+#### URLs You Can Generate
+
 * Editing URL
-1. Complete creating puzzle in Edit mode "Problem".
-2. If you need to save your puzzle creation progress and come back later to edit then click on this button.
-3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
+	1. Complete creating puzzle in Edit mode "Problem".
+	2. If you need to save your puzzle creation progress and come back later to edit then click on this button.
+	3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
 
 * Solving URL
-1. Complete creating puzzle in Edit mode "Problem".
-2. If you want to share your puzzle for others to solve then click on this button.
-3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
+	1. Complete creating puzzle in Edit mode "Problem".
+	2. If you want to share your puzzle for others to solve then click on this button.
+	3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
 
 * Clone URL
-1. This is to access the URL as text for the copy/duplicating the puzzle. This is a alternative to the CLONE button.
-2. If you need to save your puzzle creation/solving progress and come back later to edit/solve then click on this button.
-3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
+	1. This is to access the URL as text for the copy/duplicating the puzzle. This is a alternative to the CLONE button.
+	2. If you need to save your puzzle creation/solving progress and come back later to edit/solve then click on this button.
+	3. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Look at the Options section below for more detailed description.
 
-* URL with Answer Check
-1. Complete creating puzzle in Edit mode "Problem".
-2. Select Edit mode "Solution" and complete the solution. The solution must be entered using certain shape or color which Penpa+ will detect. Check the following image for guidance:
-![Use the mentioned color/shape for implementing solution](./images/multisolution.PNG "Solution checking settings")
-3. If you want to share your puzzle for others to solve with the ability to verify the solution then click on "URL with answer check / Extra options" button. A new window will appear.
-	1. Please note that the solution will check only for a certain elements with a certain color and style.
-	2. The new window that appeared will show you all the possibilities. Select the relevant options. There are two choices:
-		1. "AND" column - Solution will check for all the selected elements.
-		2. "OR" column - Solution will check if at least any one of the selected elements is completed.
-		3. If both "AND", "OR" column has some checkmarks then Penpa+ will ignore the "OR" column and only consider "AND" column.
-		4. If no option is selected, then it will check for all the elements.
-	3. You should enter the solution in Step 2 using one of the accepted color and style as shown in the window.
-4. Click on "Generate URL with answer check".
-5. Then you can copy the URL generated or use URL_short button to shorten the generated URL. Clicking on the "URL_short" button automatically copies the URL, look at the Options section below for more detailed description.
-6. You can verify if the solution check is enabled if "Solution Button" is green colored in Solver mode and a text "Automatic answer checking is enabled" is displayed.
+* URL with Answer Check *See advanced export below.*
 
 * URL for contests
-1. This is almost like URL for solving with following exceptions:
-	1. No Undo/Redo feature.
-	2. No I/O Sudoku Option.
-	3. No Share Option.
-	4. Some additional display information to help the solver.
-2. Useful for online contests (e.g. Logic Masters India - Puzzle Ramayan and Sudoku Mahabharat contests)
+	1. This is almost like URL for solving with following exceptions:
+		1. No Undo/Redo feature.
+		2. No I/O Sudoku Option.
+		3. No Share Option.
+		4. Some additional display information to help the solver.
+	2. Useful for online contests (e.g. Logic Masters India - Puzzle Ramayan and Sudoku Mahabharat contests)
 
-* Options
+#### Handling Your URL
+
 1. Copy: copies the URL to the clipboard
-2. Download: downloads a .txt file with the url
-3. Open: opens a new TAB with the same url
-4. URL_short:
+2. Open: opens a new TAB with the same url
+3. Download: downloads a .txt file with the url
+4. Shorten:
 	1. First create an URL using one of the four methods described above.
-	2. Click on "URL_short" (It will open a new TAB, URL is automatically copied to your clipboard).
-	3. Paste the URL (CTRL + V on windows).
+	2. Click the "Shorten" button in Penpa+ (It will open a new TAB, URL is automatically copied to your clipboard).
+	3. Paste the URL (CTRL + V on Windows or Linux).
 	4. Click "Shorten"
-4. Cancel: close the window
+5. Cancel: close the window
 
-* URL with answer check / Extra options (puzzle_output_file -> GMPuzzle output:)
-1. This allows user to generate a text file output that follows the submission formatting rules for GMPuzzles (https://tinyurl.com/GMPuzzlesFormatting).
-2. It currently supports (this list is frequently updated):
-	* Sudoku
-		* classicsudoku (cs)
-		* thermosudoku (ts)
-			* Special -> Thermo
-		* arrowsudoku (as)
-			* Special -> Sudoku Arrow
-		* evenoddsudoku (eos)
-			* [Panel: ON] Use Shape mode -> Shape/Circle submode (1st option in the dropdown) and Shape/Square submode (2nd option in the dropdown)
-		* consecutivepairssudoku (cps)
-			* [Panel: ON] Use Shape mode -> Shape/Circle submode -> XS size (1st option in the dropdown). Set BORDER: ON to put circles on edges.
-		* tightfitsudoku (tfs)
-			* (Panel: ON) For Slash/Split: Use Shape Mode -> Shape Submode -> "〇△◻x" from dropdown list -> 6th Shape in the Panel
-			* For numbers: Use "Corner" submode (6th option) to enter in top left or bottom right corner of the split cell, Normal submode for numbers in the cells without split
-		* killersudoku (ks)
-			* Given digits: Use Number -> Normal or Sudoku -> Normal in Problem mode
-			* Cages: Use Cage -> Killer in Problem mode
-			* Cage Clues: Use Number -> Killer in Problem mode
-			* Solution digits: Use Number -> Normal or Sudoku -> Normal in Solution mode
-			* [Alert] Cage definitions might need manual correction in the output file for puzzles with more than 26 cages
-	* Number Placement
-		* tomtom (tt)
-			* Use +, -, x, / from keyboard for mathematical operator
-			* For numbers: Number mode -> "Corner" submode (6th option)
-		* skyscrapers (ss)
-			* Ensure 1 white row/column on top/botton and left/right - e.g. If your puzzle is 7x7 size, then set the Rows = 9, Columns = 9, White Space: Over = 1, Under = 1, Left = 1, Right = 1 in the New Grid settings
-		* kakuro
-			* (Panel: ON) For Slash/Split: Use Shape Mode -> Special 1 Submode -> "kakuro" from dropdown list -> 1st and 2nd Shape in the Panel
-			* For numbers: Use "Corner" submode (6th option) and "W" style (white) to enter in top right or bottom left corner of the split cell, Normal submode for numbers in the cells without split (Green or Blue color)
-		* doublekakuro (dk)
-			* (Panel: ON) For Slash/Split: Use Shape Mode -> Special 1 Submode -> "kakuro" from dropdown list -> 1st and 2nd Shape in the Panel
-			* For numbers: Use "Corner" submode (6th option) and "W" style (white) to enter in top right or bottom left corner of the split cell, Normal submode for numbers in the cells without split (Green or Blue color)
-			* For 2x2 regions: Use Surface mode and shade the upper-left corner of a 2x2 region with grey color and remaining 3 cells with green color.
-			* Solution: Use Number mode --> Normal submode. Fill in all the white and grey shaded cells with appropriate numbers and ignore the green shaded cells. This is similar to as it's described in the document. They grey shaded cell contains the number that belongs to corresponding 2x2 region.
-	* Object Placement
-		* Statue Park (sp)
-			* [Panel: ON] Use Shape mode -> Shape/Circle submode
-		* minesweeper (ms)
-			* Use 1 to represent mine in the Solution
-		* doubleminesweeper (dms)
-			* Use 1 and 2 to represent mines in the Solution
-		* starbattle (sb)
-			* specify number of stars after puzzle type [e.g starbattle2 or starbattle3]
-			* use grey shading in solution mode for stars, it is assumed rows=columns as per GMPuzzles formatting
-		* battleships (bs)
-			* ensure 1 white row/column on bottom and right - e.g. If your puzzle is 10x10 size, then set the Rows = 11, Columns = 11, White Space: Over = 0, Under = 1, Left = 0, Right = 1 in the New Grid settings
-			* For numbers: use Normal submode
-			* (Panel: ON) For Shapes: use Shape Mode -> Specal 1 submode -> Battleship from dropdown list
-			* Unfortunately there is no good way to ask the fleet from user, this output will come with standard fleet, you need to manually modify the [# of types of ships] and [fleet description] if your puzzle has a different set
-	* Shading Puzzles
-		* kurotto
-			* Use Number mode -> White circle Style
-			* for empty circle - just place white circle with any digit and then press backspace to remove the digit
-		* kuromasu (Use Number mode -> White circle Style)
-		* tapa (Number mode -> Tapa submode)
-		* nurikabe
-		* nanro
-		* lits
-		* crossthestreams (cts)
-			* ensure enough white row/column on top and left - e.g. If your puzzle is 10x10 size and has 4 rows of clues above and 3 columns of clues in the left, then set the Rows = 14, Columns = 13, White Space: Over = 4, Under = 0, Left = 3, Right = 0 in the New Grid settings
-			* enter clues using Number mode -> Normal submode (use the multiplication character on digit 8 from the keyboard for star)
-			* use grey shading in solution (Surface mode)
-	* Region Division Puzzles
-		* fillomino
-		* pentominous
-		* cave
-			* Solution shaded in any shades of grey.
-		* snakepit
-			* Use Number mode -> White circle Style
-			* for empty circle - just place white circle with any digit and then press backspace to remove the digit
-		* araf (Use Number mode -> White circle Style, green edge in solution mode for regions)
-		* spiralgalaxies (sg)
-			* (Panel: ON) use 2nd or 8th or 9th position circles for Black, White and Grey circle respectively in the Shape -> Shape -> Circle
-			* (Border: ON) for placing circles on edges and corners
-			* green edge in solution mode for regions
-	* Loop/ Path Puzzles
-		* balanceloop
-			* Use Number mode -> White circle style / Black circle style
-			* for empty circle, just place white / Black circle with any digit and then press backspace to remove the digit
-		* masyu (Use Shape mode -> Shape/Circle submode [Panel: ON])
-		* tapalikeloop
-		* slitherlink
-		* yajilin
-			* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use grey square (9th shape in the panel)
-			* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
-		* doubleyajilin
-			* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use grey square (9th shape in the panel)
-			* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
-		* castlewall
-			* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use black and white square respectively (2nd and 8th shape in the panel)
-			* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
-			* Use white color style for arrow and clue on black square
-3. How to use it?
-	1. Create a Puzzle in "Edit: Problem" mode using the guide provided in Step 2.
-	2. Select "Solution Mode" and fill in the solution (Grey shading, Green numbering, Green loop, Green edge).
-	3. click on Share -> URL with answer check / Extra options -> puzzle_output_file.
-	4. In the "Header" area, type the puzzle type you are creating.
-	5. click on "GMPuzzle output" button.
-	6. Specify your required filename and click "Download" button.
-		* Template: [Constructor Initials]-[SubmissionID]-[Genre]-[ShortTitle].txt
+#### Advanced Export
+
+Penpa+ supports some advanced export options that allow you to specify the solution to your puzzle and allow you to share a URL with answer checking or in a format supported by online publishers like GM Puzzles.
+
+1. Create your puzzle in Penpa+ with "Problem" selected in the toolbar.
+2. Click "Solution" to switch to solution editing and enter the solution.
+The solution must be entered using certain shapes or colors which Penpa+ will detect. Check the following image for guidance:
+![Use the mentioned color/shape for implementing solution](./images/multisolution.PNG "Solution checking settings")
+3. Click "Share" and enter the information in the popup as usual.
+4. Click "URL with Answer Check / Advanced Options" and additional options will appear.
+
+##### Solve URL with Answer Checking 
+
+1. Please note that the solution will check only for a certain elements with a certain color and style. The new window that appeared will show you all the possibilities.
+	1. Choose "All constraints" if the answer checker should check each of the types of solution information provided.
+	2. Choose "Any of the constraints" if you provided multiple different ways to enter the solution and only need one of them to be entered to have the puzzle be considered complete.
+	4. If no checkboxes are selected, Penpa+ will check for all the elements.
+2. Click on "Generate URL with answer check".
+3. The advanced options will close and the URL will be available back in the main "Share" window. See the Options section below for more detailed description.
+4. You can verify if the solution check is enabled if "Solution Button" is green colored in Solver mode and a text "Automatic answer checking is enabled" is displayed.
+
+##### GM Puzzle Output
+This allows user to generate a text file output that follows the submission formatting rules for GMPuzzles (https://tinyurl.com/GMPuzzlesFormatting)
+
+###### Usage
+1. Create a Puzzle in "Edit: Problem" mode.
+2. Select "Solution Mode" and fill in the solution using specific colors and tools: Grey shading, Green numbering, Green loop, Green edge.
+3. Click on Share -> URL with Answer Check / Advanced Options -> puzzle_output_file.
+4. In the "Header" area, type the puzzle type you are creating.
+5. Click on "GMPuzzle output" button.
+6. Specify your required filename and click "Download" button.
+	* Template: [Constructor Initials]-[SubmissionID]-[Genre]-[ShortTitle].txt
 		* Example: SG-012-kurottu-pairs.txt
 
+###### Supported Puzzle Types for GM Puzzles
+* Sudoku
+	* classicsudoku (cs)
+	* thermosudoku (ts)
+		* Special -> Thermo
+	* arrowsudoku (as)
+		* Special -> Sudoku Arrow
+	* evenoddsudoku (eos)
+		* [Panel: ON] Use Shape mode -> Shape/Circle submode (1st option in the dropdown) and Shape/Square submode (2nd option in the dropdown)
+	* consecutivepairssudoku (cps)
+		* [Panel: ON] Use Shape mode -> Shape/Circle submode -> XS size (1st option in the dropdown). Set BORDER: ON to put circles on edges.
+	* tightfitsudoku (tfs)
+		* (Panel: ON) For Slash/Split: Use Shape Mode -> Shape Submode -> "〇△◻x" from dropdown list -> 6th Shape in the Panel
+		* For numbers: Use "Corner" submode (6th option) to enter in top left or bottom right corner of the split cell, Normal submode for numbers in the cells without split
+	* killersudoku (ks)
+		* Given digits: Use Number -> Normal or Sudoku -> Normal in Problem mode
+		* Cages: Use Cage -> Killer in Problem mode
+		* Cage Clues: Use Number -> Killer in Problem mode
+		* Solution digits: Use Number -> Normal or Sudoku -> Normal in Solution mode
+		* [Alert] Cage definitions might need manual correction in the output file for puzzles with more than 26 cages
+* Number Placement
+	* tomtom (tt)
+		* Use +, -, x, / from keyboard for mathematical operator
+		* For numbers: Number mode -> "Corner" submode (6th option)
+	* skyscrapers (ss)
+		* Ensure 1 white row/column on top/botton and left/right - e.g. If your puzzle is 7x7 size, then set the Rows = 9, Columns = 9, White Space: Over = 1, Under = 1, Left = 1, Right = 1 in the New Grid settings
+	* kakuro
+		* (Panel: ON) For Slash/Split: Use Shape Mode -> Special 1 Submode -> "kakuro" from dropdown list -> 1st and 2nd Shape in the Panel
+		* For numbers: Use "Corner" submode (6th option) and "W" style (white) to enter in top right or bottom left corner of the split cell, Normal submode for numbers in the cells without split (Green or Blue color)
+	* doublekakuro (dk)
+		* (Panel: ON) For Slash/Split: Use Shape Mode -> Special 1 Submode -> "kakuro" from dropdown list -> 1st and 2nd Shape in the Panel
+		* For numbers: Use "Corner" submode (6th option) and "W" style (white) to enter in top right or bottom left corner of the split cell, Normal submode for numbers in the cells without split (Green or Blue color)
+		* For 2x2 regions: Use Surface mode and shade the upper-left corner of a 2x2 region with grey color and remaining 3 cells with green color.
+		* Solution: Use Number mode --> Normal submode. Fill in all the white and grey shaded cells with appropriate numbers and ignore the green shaded cells. This is similar to as it's described in the document. They grey shaded cell contains the number that belongs to corresponding 2x2 region.
+* Object Placement
+	* Statue Park (sp)
+		* [Panel: ON] Use Shape mode -> Shape/Circle submode
+	* minesweeper (ms)
+		* Use 1 to represent mine in the Solution
+	* doubleminesweeper (dms)
+		* Use 1 and 2 to represent mines in the Solution
+	* starbattle (sb)
+		* specify number of stars after puzzle type [e.g starbattle2 or starbattle3]
+		* use grey shading in solution mode for stars, it is assumed rows=columns as per GMPuzzles formatting
+	* battleships (bs)
+		* ensure 1 white row/column on bottom and right - e.g. If your puzzle is 10x10 size, then set the Rows = 11, Columns = 11, White Space: Over = 0, Under = 1, Left = 0, Right = 1 in the New Grid settings
+		* For numbers: use Normal submode
+		* (Panel: ON) For Shapes: use Shape Mode -> Specal 1 submode -> Battleship from dropdown list
+		* Unfortunately there is no good way to ask the fleet from user, this output will come with standard fleet, you need to manually modify the [# of types of ships] and [fleet description] if your puzzle has a different set
+* Shading Puzzles
+	* kurotto
+		* Use Number mode -> White circle Style
+		* for empty circle - just place white circle with any digit and then press backspace to remove the digit
+	* kuromasu (Use Number mode -> White circle Style)
+	* tapa (Number mode -> Tapa submode)
+	* nurikabe
+	* nanro
+	* lits
+	* crossthestreams (cts)
+		* ensure enough white row/column on top and left - e.g. If your puzzle is 10x10 size and has 4 rows of clues above and 3 columns of clues in the left, then set the Rows = 14, Columns = 13, White Space: Over = 4, Under = 0, Left = 3, Right = 0 in the New Grid settings
+		* enter clues using Number mode -> Normal submode (use the multiplication character on digit 8 from the keyboard for star)
+		* use grey shading in solution (Surface mode)
+* Region Division Puzzles
+	* fillomino
+	* pentominous
+	* cave
+		* Solution shaded in any shades of grey.
+	* snakepit
+		* Use Number mode -> White circle Style
+		* for empty circle - just place white circle with any digit and then press backspace to remove the digit
+	* araf (Use Number mode -> White circle Style, green edge in solution mode for regions)
+	* spiralgalaxies (sg)
+		* (Panel: ON) use 2nd or 8th or 9th position circles for Black, White and Grey circle respectively in the Shape -> Shape -> Circle
+		* (Border: ON) for placing circles on edges and corners
+		* green edge in solution mode for regions
+* Loop/ Path Puzzles
+	* balanceloop
+		* Use Number mode -> White circle style / Black circle style
+		* for empty circle, just place white / Black circle with any digit and then press backspace to remove the digit
+	* masyu (Use Shape mode -> Shape/Circle submode [Panel: ON])
+	* tapalikeloop
+	* slitherlink
+	* yajilin
+		* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use grey square (9th shape in the panel)
+		* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
+	* doubleyajilin
+		* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use grey square (9th shape in the panel)
+		* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
+	* castlewall
+		* (Panel: ON) For square - Shape mode -> Shape submode -> Square (from dropdown list - XL size will occupy entire cell), use black and white square respectively (2nd and 8th shape in the panel)
+		* For Number and Arrow: use Number mode -> Arrow submode (drag the mouse in the cell for the arrow, type in the number from keyboard or select from panel)
+		* Use white color style for arrow and clue on black square
 
 ### Clone
 * Opens the puzzle in new link in new tab. Its like making a copy/duplicate of the Puzzle.
@@ -462,8 +476,8 @@ You can now site this in your research and publications using:
 * This function has multiple purposes. Mainly, it is a solution for "URL too long Error".
 * If the puzzle is too big and contains a lot of elements, it generates a big URL and the size is limited by the internet. In order to address this issue, one can use this Load button option to copy the big URL and click "Load URL" button.
 * Basically, one can share the "Long URL" and ask the user to copy paste in the "Load" button and load the puzzle locally into Penpa.
-* Secondly, it can also be used to import https://puzz.link/db/ puzzles. Those with a :heavy_check_mark: the right of the name are supported while those marked with a :x: are not (yet).
-
+* Secondly, it can also be used to import https://puzz.link/db/ puzzles. Those with a :heavy_check_mark: the right of the name are supported while those marked with a :x: are not (yet). \
+\
 Aho-ni-Narikire :heavy_check_mark: ;
 Akari (Light up) :heavy_check_mark: ;
 Amibo :x: ;
@@ -610,7 +624,7 @@ Yin-Yang :heavy_check_mark: ;
 Yosenabe :x: ;
 
 * It can also import puzzles from https://pzprxs.vercel.app/, a fork of puzz.link with different puzzle variants.
-
+\
 Building Walk :x: ;
 Canal View :heavy_check_mark: ;
 Chained Block :heavy_check_mark: ;
@@ -625,7 +639,7 @@ Tonttiraja :heavy_check_mark: ;
 Voxas :x: ;
 
 * These variants are currently impossible because of the grid or the controls.
-
+\
 Army Ants :x: ;
 Bonsan :x: ;
 Curve Data :x: ;
