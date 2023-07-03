@@ -1590,3 +1590,54 @@ sup {
     font-size: 30px;
     padding: 2px;
 }
+
+#responsive-toolbar {
+    display: block;
+    position: fixed;
+    bottom: 5px;
+    left: 5px;
+    right: 5px;
+    background: #000;
+    color: #fff;
+    border-radius: 22px;
+    min-height: 2em;
+}
+#mode-toolbar {
+    display: block;
+    padding: 3px;
+}
+#mode-toolbar button {
+    position: relative;
+    background: #333;
+    color: #fff;
+    border: 0;
+    margin: 4px;
+    padding: 0;
+    border-radius: 50%;
+    aspect-ratio: 1;
+    width: 36px;
+    height: 36px;
+    outline: 1px solid #000;
+    outline-offset: 1px;
+}
+#mode-toolbar button svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+#mode-toolbar button svg use {
+    fill: none;
+    stroke: #ddd;
+    stroke-width: 0.264583;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+#mode-toolbar button.active {
+    outline: 1px solid #0cf;
+}
+#mode-toolbar button.active svg use {
+    stroke: #0cf;
+}
