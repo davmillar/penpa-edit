@@ -1607,7 +1607,12 @@ sup {
     display: flex;
     height: 44px;
     padding: 3px;
-    overflow-x: scroll;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+#mode-toolbar::-webkit-scrollbar {
+    display: none;
 }
 #mode-toolbar button {
     position: relative;
