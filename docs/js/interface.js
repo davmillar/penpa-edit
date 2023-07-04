@@ -3,6 +3,7 @@ const PenpaUI = {
         const allModes = penpa_modes.square;
         for (var i of allModes.mode) {
             document.getElementById("mo_" + i + "_lb").classList.toggle('is_hidden', hidden);
+            document.getElementById(`mode-toolbar-${i}`).classList.toggle('is_hidden', hidden);
         }
         for (var i of allModes.sub) {
             document.getElementById("sub_" + i + "_lb").classList.toggle('is_hidden', hidden);
@@ -47,6 +48,7 @@ const PenpaUI = {
         // Remove all modes, square grid is the reference as it has all the modes
         for (var i of allPossible.mode) {
             document.getElementById("mo_" + i + "_lb").classList.toggle('is_hidden', selectedGrid.mode.indexOf(i) < 0);
+            document.getElementById(`mode-toolbar-${i}`).classList.toggle('is_hidden', selectedGrid.mode.indexOf(i) < 0);
         }
         for (var i of allPossible.sub) {
             document.getElementById("sub_" + i + "_lb").classList.toggle('is_hidden', selectedGrid.sub.indexOf(i) < 0);
@@ -78,5 +80,36 @@ const PenpaUI = {
         for (var i of allPossible.exceptions) {
             document.getElementById(i).classList.toggle('is_hidden', selectedGrid.exceptions.indexOf(i) < 0);
         }
+    },
+
+    _toolModes: [
+        'surface',
+        'line',
+        'lineE',
+        'wall',
+        'cage',
+        'board',
+        'move',
+        'number',
+        'sudoku',
+        'symbol',
+        'special',
+        'combi'
+    ],
+
+    buildModeButtons: function () {
+        const modeToolbar = document.getElementById('mode-toolbar');
+        this._toolModes.forEach(toolName => {
+            const toolButton = document.createElement('button');
+            toolButton.innerHTML = `<svg><use href="icons.svg#${toolName}" width="100%" height="100%" /></svg>`;
+            toolButton.setAttribute('id', `mode-toolbar-${toolName}`);
+            modeToolbar.appendChild(toolButton);
+        });
     }
 };
+
+(()=>{
+    PenpaUI.buildModeButtons();
+    // Testing...
+    document.getElementById('app-container').classList.add('pocket');
+})();

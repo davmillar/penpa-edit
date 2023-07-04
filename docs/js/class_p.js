@@ -2234,6 +2234,11 @@ class Puzzle {
             document.getElementById('style_' + mode).style.display = 'inline-block';
         }
         document.getElementById('mo_' + mode).checked = true;
+        const currentlyActive = document.querySelector('#mode-toolbar button.active');
+        if (currentlyActive) {
+            currentlyActive.classList.remove('active');
+        }
+        document.getElementById('mode-toolbar-' + mode).classList.add('active');
         this.submode_check('sub_' + mode + this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
         if (mode === "symbol" && !this.panelflag) {
             // Show the panel on the first time landing and then respect user's choice

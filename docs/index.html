@@ -135,6 +135,9 @@
         <span id="version-info">Penpa+ v<span id="version-number"></span> &copy; 2020-2023 <button id="page_help">Help</button></span>
     </header>
     <div id="app-container">
+        <div id="responsive-toolbar">
+            <div id="mode-toolbar"><!-- See interface.js for how this is populated --></div>
+        </div>
         <div id="tool-container">
             <div id="tool-holder">
                 <div id="top_button">
@@ -1626,38 +1629,19 @@
             </div>
         </div>
     </div>
-    <div id="responsive-toolbar">
-        <div id="mode-toolbar">
-            <button id="mode-toolbar-surface">
-                <svg>
-                    <use href="icons.svg#surface" width="100%" height="100%" />
-                </svg>
-            </button>
-            <button id="mode-toolbar-line" class="active">
-                <svg>
-                    <use href="icons.svg#line" width="100%" height="100%" />
-                </svg>
-            </button>
-            <button id="mode-toolbar-edge">
-                <svg>
-                    <use href="icons.svg#edge" width="100%" height="100%" />
-                </svg>
-            </button>
-        </div>
-    </div>
     <script type="text/javascript">
         script_sources = ["./js/libs/easytimer.min.js",
-            "./js/timer.js",
-            "./js/conversion.js"
-        ];
-        for (let i = 0; i < script_sources.length; i++) {
-            let script = document.createElement("script");
-            script.type = "text/javascript";
-            script.src = script_sources[i] + "?v=" + ver;
-            script.async = false;
-            document.head.appendChild(script);
-        }
-        document.getElementById('version-number').innerHTML = ver;
+        "./js/timer.js",
+        "./js/conversion.js"
+    ];
+    for (let i = 0; i < script_sources.length; i++) {
+        let script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = script_sources[i] + "?v=" + ver;
+        script.async = false;
+        document.head.appendChild(script);
+    }
+    document.getElementById('version-number').innerHTML = ver;
     </script>
 </body>
 

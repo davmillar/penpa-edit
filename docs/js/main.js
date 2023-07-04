@@ -1951,6 +1951,11 @@ onload = function() {
             pu.mode_set(e.target.id.slice(3, -3));
             e.preventDefault();
         }
+        console.debug(e.target.id, e.target.id.slice(0, 13), e.target.id.slice(13));
+        if (e.target.id.slice(0, 13) === "mode-toolbar-") {
+            pu.mode_set(e.target.id.slice(13));
+            e.preventDefault();
+        }
         // Sub mode
         if (e.target.id.slice(0, 4) === "sub_") {
             pu.submode_check(e.target.id.slice(0, -3));
