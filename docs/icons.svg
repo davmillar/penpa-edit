@@ -21,9 +21,13 @@
        height="40"
        viewBox="0 0 10.583333 10.583333"
        id="surface">
-      <path
-         id="surface-path"
-         d="M 5.2916664,4.7624998 7.9374997,2.1166666 8.4666663,2.6458332 5.8208331,5.2916664 M 3.7041666,4.7624999 C 4.2333332,4.2333332 4.2333332,4.2333332 4.4979165,4.2333331 c 0.2645833,10e-8 0.2645833,-1e-7 0.79375,0.5291667 l 0.5291666,0.5291667 c 0.3700012,0.2956193 0.5291667,0.5291666 0.5291667,0.7937499 0,0.2645834 -0.5291666,0.7937501 -0.5291666,0.7937501 m -2.1166666,1.0583334 1.5874999,-1.5875 m -2.1166666,1.0583333 1.5875,-1.5875 m -2.1166667,1.0583333 1.5875,-1.5874999 m -2.1166666,1.0583333 2.1166666,2.1166666 1.5875,-1.5875 -2.1166666,-2.1166666 z" />
+      <g
+         id="g7980"
+         transform="rotate(180, 5.2916665, 5.2916665)">
+        <path
+           id="surface-path"
+           d="M 5.2916664,4.7624998 7.9374997,2.1166666 8.4666663,2.6458332 5.8208331,5.2916664 M 3.7041666,4.7624999 C 4.2333332,4.2333332 4.2333332,4.2333332 4.4979165,4.2333331 c 0.2645833,10e-8 0.2645833,-1e-7 0.79375,0.5291667 l 0.5291666,0.5291667 c 0.3700012,0.2956193 0.5291667,0.5291666 0.5291667,0.7937499 0,0.2645834 -0.5291666,0.7937501 -0.5291666,0.7937501 m -2.1166666,1.0583334 1.5874999,-1.5875 m -2.1166666,1.0583333 1.5875,-1.5875 m -2.1166667,1.0583333 1.5875,-1.5874999 m -2.1166666,1.0583333 2.1166666,2.1166666 1.5875,-1.5875 -2.1166666,-2.1166666 z" />
+      </g>
     </symbol>
     <symbol
        width="40"
@@ -144,10 +148,10 @@
      inkscape:document-units="px"
      showgrid="true"
      inkscape:zoom="3.3572617"
-     inkscape:cx="68.955006"
-     inkscape:cy="74.465449"
-     inkscape:window-width="1920"
-     inkscape:window-height="979"
+     inkscape:cx="116.46396"
+     inkscape:cy="102.76232"
+     inkscape:window-width="1280"
+     inkscape:window-height="966"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -177,52 +181,64 @@
       <symbol id="edge" viewBox="34.925003 0 10.583333 10.583333" width="40" height="40"> -->
     <!-- </symbol> -->
     <use
-       xlink:href="#surface"
-       id="use14963"
-       inkscape:label="surface" />
-    <use
        xlink:href="#line"
        id="use15022"
-       inkscape:label="line" />
+       inkscape:label="line"
+       style="opacity:0.1" />
     <use
        xlink:href="#lineE"
        id="use15033"
-       inkscape:label="lineE" />
+       inkscape:label="lineE"
+       style="opacity:0.1" />
     <use
        xlink:href="#wall"
        id="use15047"
-       inkscape:label="wall" />
+       inkscape:label="wall"
+       style="opacity:0.1" />
     <use
        xlink:href="#symbol"
        id="use15064"
-       inkscape:label="symbol" />
+       inkscape:label="symbol"
+       style="opacity:0.1" />
     <use
        xlink:href="#move"
        id="use15085"
-       inkscape:label="move" />
+       inkscape:label="move"
+       style="opacity:0.1" />
     <use
        xlink:href="#cage"
        id="use15108"
-       inkscape:label="cage" />
+       inkscape:label="cage"
+       style="opacity:0.1" />
     <use
        xlink:href="#combi"
        id="use15134"
-       inkscape:label="combi" />
+       inkscape:label="combi"
+       style="opacity:0.1" />
     <use
        xlink:href="#special"
        id="use15163"
-       inkscape:label="special" />
+       inkscape:label="special"
+       style="opacity:0.1" />
     <use
        xlink:href="#sudoku"
        id="use15196"
-       inkscape:label="sudoku" />
+       inkscape:label="sudoku"
+       style="opacity:0.1" />
     <use
        xlink:href="#number"
        id="use15232"
-       inkscape:label="number" />
+       inkscape:label="number"
+       style="opacity:0.1" />
     <use
        xlink:href="#board"
        id="use15325"
-       inkscape:label="board" />
+       inkscape:label="board"
+       style="opacity:0.1" />
+    <use
+       xlink:href="#surface"
+       id="use14963"
+       inkscape:label="surface"
+       style="opacity:1" />
   </g>
 </svg>
