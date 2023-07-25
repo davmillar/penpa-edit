@@ -1,3 +1,21 @@
+function errorMsg(html) {
+    Swal.fire({
+        title: Branding.errorTitle,
+        html: html,
+        icon: 'error',
+        confirmButtonText: Branding.okButtonText,
+    })
+}
+
+function infoMsg(html) {
+    Swal.fire({
+        title: Branding.infoTitle,
+        html: html,
+        icon: 'info',
+        confirmButtonText: Branding.okButtonText,
+    })
+}
+
 function boot() {
     var obj = document.getElementById("dvique");
     var canvas = document.createElement("canvas");
@@ -194,12 +212,7 @@ function create_newboard() {
             document.getElementById('constraints').style.display = 'none';
         }
     } else {
-        Swal.fire({
-            title: 'Error:',
-            html: 'Display size must be in the range <h2 class="warn">12-90</h2>',
-            icon: 'error',
-            confirmButtonText: 'OK',
-        })
+        errorMsg('Display size must be in the range <h2 class="warn">12-90</h2>')
     }
 }
 
@@ -245,10 +258,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_square(nx, ny, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Rows/Columns Size must be in the range <h2 class="warn">1-' + gridmax['square'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -261,10 +274,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_hex(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['hex'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -277,10 +290,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_tri(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['tri'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -293,10 +306,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_pyramid(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['pyramid'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -306,10 +319,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_iso(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['iso'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -483,10 +496,10 @@ function make_class(gridtype, loadtype = 'new') {
                 }
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Rows/Columns Size must be in the range <h2 class="warn">1-' + gridmax['kakuro'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -496,10 +509,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_truncated_square(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['truncated'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -509,10 +522,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_tetrakis_square(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['tetrakis'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -522,10 +535,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_snub_square(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['snub'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -535,10 +548,10 @@ function make_class(gridtype, loadtype = 'new') {
                 pu = new Puzzle_cairo_pentagonal(n0, n0, size);
             } else {
                 Swal.fire({
-                    title: 'Error:',
+                    title: 'Swaroop says:',
                     html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['cairo'] + '</h2>',
                     icon: 'error',
-                    confirmButtonText: 'OK',
+                    confirmButtonText: 'ok 🙂',
                 })
             }
             break;
@@ -547,11 +560,7 @@ function make_class(gridtype, loadtype = 'new') {
             if (n0 <= 20 && n0 > 0) {
                 pu = new Puzzle_rhombitrihexagonal(n0, n0, size);
             } else {
-                Swal.fire({
-                    html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['rhombitrihex'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Side Size must be in the range <h2 class="warn">1-' + gridmax['rhombitrihex'] + '</h2>');
             }
             break;
         case "deltoidal_trihexagonal":
@@ -559,11 +568,7 @@ function make_class(gridtype, loadtype = 'new') {
             if (n0 <= 20 && n0 > 0) {
                 pu = new Puzzle_deltoidal_trihexagonal(n0, n0, size);
             } else {
-                Swal.fire({
-                    html: 'Side Size must be in the range <h2 class="warn">1-' + gridmax['deltoidal'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Side Size must be in the range <h2 class="warn">1-' + gridmax['deltoidal'] + '</h2>');
             }
             break;
     }
@@ -1169,7 +1174,6 @@ function panel_toggle() {
 }
 
 function panel_onoff() {
-    console.log('UserSettings.panel_shown', UserSettings.panel_shown);
     if (UserSettings.panel_shown) {
         document.getElementById('float-key').style.display = "block";
         if (window.panel_toplast && window.panel_leftlast) {
@@ -1547,12 +1551,7 @@ function saveimage_download() {
             }
         }
     } else {
-        Swal.fire({
-            title: 'Error:',
-            html: 'The characters <h2 class="warn">\\ / : * ? \" < > |</h2> cannot be used in filename',
-            icon: 'error',
-            confirmButtonText: 'OK',
-        })
+        errorMsg('The characters <h2 class="warn">\\ / : * ? \" < > |</h2> cannot be used in filename');
     }
 }
 
@@ -1709,7 +1708,7 @@ function make_gmpfile() {
 
 function savetext_copy() {
     Swal.fire({
-        title: 'Success:',
+        title: 'Swaroop says:',
         html: '<h2 class="info">URL is copied to clipboard</h2>',
         icon: 'info'
     })
@@ -1766,10 +1765,10 @@ function saveblob_download(blob, defaultFilename) {
         }
     } else {
         Swal.fire({
-            title: 'Error:',
+            title: 'Swaroop says:',
             html: 'The characters <h2 class="warn">\\ / : * ? \" < > |</h2> cannot be used in filename',
             icon: 'error',
-            confirmButtonText: 'OK',
+            confirmButtonText: 'ok 🙂',
         });
     }
 }
@@ -1919,10 +1918,7 @@ function load_feedback() {
 }
 
 function show_shortcuts() {
-    Swal.fire({
-        title: 'Shortcuts',
-        html: '<table style="width:100%" class="shortcuts"><tr><th style="color:Green;" colspan="2">General</th></tr><tr><th style="color:red;">F2</th><th>Problem mode</th></tr><tr><th style="color:red;">F3</th><th>Solution mode</th></tr><tr><th style="color:red;">F4</th><th>Hide/Show Timer</th></tr><tr><th style="color:red;">Ctrl + D</th><th>Clone/Duplicate</th></tr><tr><th style="color:Green;" colspan="2">Sudoku Mode</th></tr><tr><th style="color:red;">Z</th><th>Normal Submode</th></tr><tr><th style="color:red;">X</th><th>Corner Submode</th></tr><tr><th style="color:red;">C</th><th>Centre Submode</th></tr><tr><th style="color:red;">V</th><th>Shading (Surface Mode)</th></tr><tr><th style="color:red;">SHIFT</th><th>For Temporary Corner Submode</th></tr><tr><th style="color:red;">SHIFT + DEL</th><th>Deletes only corner pencil marks from the selected cells</th></tr><tr><th style="color:red;">CTRL</th><th>For Temporary Centre Submode</th></tr><tr><th style="color:red;">CTRL + DEL</th><th>Deletes only centre pencil marks from the selected cells</th></tr><tr><th style="color:red;">Border: ON</th><th>will allow you to write digits on the edges</th></tr><tr><th style="color:Green;" colspan="2">Surface Mode</th></tr><tr><th colspan="2">Use number keys to switch between styles</th></tr> </table>',
-    })
+    document.getElementById("modal-keys").style.display = 'block';
 }
 
 function load(urlParam, type = 'url', origurl = null) {
@@ -3131,14 +3127,14 @@ function display_answercheck() {
     var answer_check_opt = pu.get_answercheck_settings();
     if (answer_check_opt.answercheck_opt.length === 0) {
         Swal.fire({
-            title: 'GMPuzzles says:',
+            title: 'Swaroop says:',
             html: 'No specific option selected by Author. Answer check looks for all the elements with appropriate accepted colors. Check <a href="https://github.com/swaroopg92/penpa-edit/blob/master/images/multisolution.PNG" target="_blank">this</a> for reference.',
             icon: 'info',
             confirmButtonText: 'ok 🙂',
         })
     } else {
         Swal.fire({
-            title: 'GMPuzzles says:',
+            title: 'Swaroop says:',
             html: answer_check_opt.message,
             icon: 'info',
             confirmButtonText: 'ok 🙂',
@@ -3180,7 +3176,7 @@ function decode_puzzlink(url) {
 
     if ((cols > 65) || (rows > 65)) {
         Swal.fire({
-            title: 'GMPuzzles says:',
+            title: 'Swaroop says:',
             html: 'Penpa+ does not support grid size greater than 65 rows or columns',
             icon: 'error',
             confirmButtonText: 'ok 🙂',
@@ -3281,12 +3277,7 @@ function decode_puzzlink(url) {
             } else {
                 pu = new Puzzle_square(10, 10, size);
                 setupProblem(pu, "surface");
-                Swal.fire({
-                    title: 'GMPuzzles says:',
-                    html: `Sorry, sudoku grids of size: ${cols}x${rows} are not supported`,
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                });
+                errorMsg(`Sorry, sudoku grids of size: ${cols}x${rows} are not supported`);
                 break;
             }
             setupProblem(pu, "sudoku");
@@ -4897,12 +4888,7 @@ function decode_puzzlink(url) {
             pu.user_tags = ["rassi silai"]; // Genre Tags
             break;
         default:
-            Swal.fire({
-                title: 'GMPuzzles says:',
-                html: 'It currently does not support puzzle type: ' + type,
-                icon: 'error',
-                confirmButtonText: 'ok 🙂',
-            })
+            errorMsg('It currently does not support puzzle type: ' + type);
             break;
     }
 

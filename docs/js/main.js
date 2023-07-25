@@ -265,6 +265,12 @@ onload = function() {
                 number_release_time = -1e5;
             }
 
+            if (key === '?' && pu.mode[pu.mode.qa].edit_mode !== "number") {
+                show_shortcuts();
+                e.returnValue = false;
+                return;
+            }
+
             // For shift shortcut in Sudoku mode, modify the numpad keys
             // keylocation 3 indicates numlock is ON and number pad is being used
             if (pu.mode[pu.mode.qa].edit_mode === "sudoku" && !isShiftKeyPressed(key) && keylocation === 3 && !isCtrlKeyHeld(e) && !isAltKeyHeld(e)) {
@@ -1807,9 +1813,9 @@ onload = function() {
                 if (pu.solution && pu.sol_flag === 0) {
                     Swal.fire({
                         title: '<h3>Your solution is incorrect.</h3>',
-                        html: '<h2>Keep trying!</h2>',
+                        html: '<h2>' + Branding.incorrectMessage + '</h2>',
                         icon: 'error',
-                        confirmButtonText: 'ok',
+                        confirmButtonText: Branding.okButtonText,
                     })
                     document.getElementById("pu_a_label").style.backgroundColor = Color.RED_LIGHT;
                 }
