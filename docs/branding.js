@@ -1,21 +1,21 @@
 const Branding = {
     // For messages speaking in the first person
-    appOwner: "Swaroop",
+    appOwner: "GMPuzzles",
     // For dismissing popups
-    okButtonText: "ok 🙂",
+    okButtonText: "OK",
     // Titles specific to popup types
-    errorTitle: "Swaroop says",
-    infoTitle: "Swaroop says",
+    errorTitle: "Error",
+    infoTitle: "GMPuzzles says",
 
-    solveTitle: undefined,
-    solveDefaultMessage: "Congratulations 🙂",
+    solveTitle: "Congratulations!",
+    solveDefaultMessage: "The solution is correct.",
     solveOKButtonText: "Hurray!",
 
-    incorrectMessage: "Keep trying 🙂",
+    incorrectMessage: "Keep trying!",
 
     // Usage Button Amendments
     addUsageButtons: {
-        // "Submission Rules for GMPuzzles": "https://tinyurl.com/GMPuzzlesFormatting"
+        "Submission Rules for GMPuzzles": "https://tinyurl.com/GMPuzzlesFormatting"
     }
 };
 
