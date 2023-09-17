@@ -162,7 +162,7 @@ class Puzzle {
             ["\"__a\"", "z_"],
             ["null", "zO"],
         ];
-        this.version = [3, 0, 7]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 0, 8]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -463,14 +463,49 @@ class Puzzle {
             this.gridtype === "sudoku" ||
             this.gridtype === "kakuro") {
             for (var i = 1; i < this.nx0 - 1; i++) {
-                this.cellsoutsideFrame.push(i + 1 * this.nx0); // first row
-                this.cellsoutsideFrame.push(i + (this.ny0 - 2) * this.nx0); // last row
+                // Cell Center
+                let cell_firstrow = i + 1 * this.nx0;
+                let cell_lastrow = i + (this.ny0 - 2) * this.nx0;
+                this.cellsoutsideFrame.push(cell_firstrow);
+                this.cellsoutsideFrame.push(cell_lastrow);
+
+                // Left and Right Edges of first row cell
+                let lr_firstrow = this.point[cell_firstrow].neighbor.sort(function(a, b) {
+                    return b - a; // Descending
+                }).slice(0, 2);
+                this.cellsoutsideFrame.push(lr_firstrow[0], lr_firstrow[1]);
+
+                // Left and Right Edges of last row cell
+                let lr_lastrow = this.point[cell_lastrow].neighbor.sort(function(a, b) {
+                    return b - a; // Descending
+                }).slice(0, 2);
+                this.cellsoutsideFrame.push(lr_lastrow[0], lr_lastrow[1]);
             }
             for (var j = 1; j < this.ny0 - 1; j++) {
-                this.cellsoutsideFrame.push(1 + j * this.nx0); // first column
-                this.cellsoutsideFrame.push(this.nx0 - 2 + j * this.nx0); // last column
+                // Cell Center
+                let cell_firstcol = 1 + j * this.nx0;
+                let cell_lastcol = this.nx0 - 2 + j * this.nx0;
+                this.cellsoutsideFrame.push(cell_firstcol);
+                this.cellsoutsideFrame.push(cell_lastcol);
+
+                // Top and bottom Edges of first column cell
+                let lr_firstcol = this.point[cell_firstcol].neighbor.sort(function(a, b) {
+                    return a - b; // Ascending
+                }).slice(0, 2);
+                this.cellsoutsideFrame.push(lr_firstcol[0], lr_firstcol[1]);
+
+                // Top and bottom Edges of last column cell
+                let lr_lastcol = this.point[cell_lastcol].neighbor.sort(function(a, b) {
+                    return a - b; // Ascending
+                }).slice(0, 2);
+                this.cellsoutsideFrame.push(lr_lastcol[0], lr_lastcol[1]);
             }
         }
+
+        // Remove duplicates
+        this.cellsoutsideFrame = [...new Set(this.cellsoutsideFrame.sort(function(a, b) {
+            return a - b; // Ascending
+        }))]
     }
 
     point_move(x, y, theta) {
@@ -799,7 +834,7 @@ class Puzzle {
                 }
 
 
-                // shift DeleteEdge elements to next row            
+                // shift DeleteEdge elements to next row
                 if (this[i].deletelineE) {
                     let temp = this[i].deletelineE;
                     this[i].deletelineE = {};
@@ -966,19 +1001,9 @@ class Puzzle {
             this.redraw();
         } else {
             if (sign === 1) {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>');
             } else {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Min row size reached <h2 class="warn">1</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Min row size reached <h2 class="warn">1</h2>');
             }
         }
     }
@@ -1168,7 +1193,7 @@ class Puzzle {
                     }
                 }
 
-                // Maintain DeleteEdge elements in the same row     
+                // Maintain DeleteEdge elements in the same row
                 if (this[i].deletelineE) {
                     let m;
                     let temp = this[i].deletelineE;
@@ -1240,19 +1265,9 @@ class Puzzle {
             this.redraw();
         } else {
             if (sign === 1) {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>');
             } else {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Min row size reached <h2 class="warn">1</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Min row size reached <h2 class="warn">1</h2>');
             }
         }
     }
@@ -1455,7 +1470,7 @@ class Puzzle {
                     }
                 }
 
-                // shift DeleteEdge elements to next column           
+                // shift DeleteEdge elements to next column
                 if (this[i].deletelineE) {
                     let temp = this[i].deletelineE;
                     this[i].deletelineE = {};
@@ -1625,19 +1640,9 @@ class Puzzle {
             this.redraw();
         } else {
             if (sign === 1) {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>');
             } else {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Min column size reached <h2 class="warn">1</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Min column size reached <h2 class="warn">1</h2>');
             }
         }
     }
@@ -1840,7 +1845,7 @@ class Puzzle {
                     }
                 }
 
-                // Maintain DeleteEdge elements in the same column           
+                // Maintain DeleteEdge elements in the same column
                 if (this[i].deletelineE) {
                     let temp = this[i].deletelineE;
                     this[i].deletelineE = {};
@@ -2009,19 +2014,9 @@ class Puzzle {
             this.redraw();
         } else {
             if (sign === 1) {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Max row size reached <h2 class="warn">' + this.gridmax['square'] + '</h2>');
             } else {
-                Swal.fire({
-                    title: 'Swaroop says:',
-                    html: 'Min column size reached <h2 class="warn">1</h2>',
-                    icon: 'error',
-                    confirmButtonText: 'ok 🙂',
-                })
+                errorMsg('Min column size reached <h2 class="warn">1</h2>');
             }
         }
     }
@@ -2237,43 +2232,19 @@ class Puzzle {
         this.submode_check('sub_' + mode + this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
         if (mode === "symbol" && !this.panelflag) {
             // Show the panel on the first time landing and then respect user's choice
-            if (document.getElementById('panel_button').value === "2") {
-                document.getElementById('panel_button').value = "1";
-                document.getElementById('float-key').style.display = "block";
-                if (window.panel_toplast && window.panel_leftlast) {
-                    document.getElementById('float-key-body').style.left = window.panel_leftlast;
-                    document.getElementById('float-key-body').style.top = window.panel_toplast;
-                    document.getElementById('float-key-header').style.left = window.panel_leftlast;
-                    document.getElementById('float-key-header').style.top = window.panel_toplast;
-                } else {
-                    document.getElementById('float-key-body').style.left = 0 + "px";
-                    document.getElementById('float-key-body').style.top = 0 + "px";
-                    document.getElementById('float-key-header').style.left = 0 + "px";
-                    document.getElementById('float-key-header').style.top = 0 + "px";
-                }
+            if (!UserSettings.panel_shown) {
+                UserSettings.panel_shown = true;
             }
             this.panelflag = true;
         } else if ((mode === "number" || mode === "symbol" || mode === "sudoku") &&
             ((this.ondown_key === "touchstart") || (loadtype === "url" && window.ondown_key === "touchstart"))) {
             // Automatically show panel while in number or shape or sudoku mode on the Mobile/Ipad device
-            if (document.getElementById('panel_button').value === "2") {
-                document.getElementById('panel_button').value = "1";
-                document.getElementById('float-key').style.display = "block";
-                if (window.panel_toplast && window.panel_leftlast) {
-                    document.getElementById('float-key-body').style.left = window.panel_leftlast;
-                    document.getElementById('float-key-body').style.top = window.panel_toplast;
-                    document.getElementById('float-key-header').style.left = window.panel_leftlast;
-                    document.getElementById('float-key-header').style.top = window.panel_toplast;
-                } else {
-                    document.getElementById('float-key-body').style.left = 0 + "px";
-                    document.getElementById('float-key-body').style.top = 0 + "px";
-                    document.getElementById('float-key-header').style.left = 0 + "px";
-                    document.getElementById('float-key-header').style.top = 0 + "px";
-                }
+            if (!UserSettings.panel_shown) {
+                UserSettings.panel_shown = true;
             }
         } else if (this.ondown_key === "touchstart") {
             // Turn off panel while switching to other modes on Mobile/Ipad
-            document.getElementById('panel_button').value = "2";
+            UserSettings.panel_shown = false;
             document.getElementById('float-key').style.display = "none";
         }
         if (mode === "symbol") {
@@ -2295,7 +2266,7 @@ class Puzzle {
         }
 
         // If panel is ON, show Mode info on header
-        if (document.getElementById('panel_button').value === "1") {
+        if (UserSettings.panel_shown) {
             let modes_mapping = ['Surface', 'Line', 'Edge', 'Wall', 'Number', 'Shape', 'Special', 'Cage', 'Composite', 'Sudoku', 'Box', 'Move'];
             let mode_loc = penpa_modes["square"]["mode"].indexOf(mode);
             document.getElementById('float-key-header-lb').innerHTML = "Mode: " + modes_mapping[mode_loc];
@@ -3342,6 +3313,12 @@ class Puzzle {
                     }
                 } else {
                     for (var i in this[pu].line) {
+                        // Ignoring the half cells standred line marks
+                        let cells = i.split(",");
+                        if (this.cellsoutsideFrame.includes(parseInt(cells[0])) &&
+                            this.cellsoutsideFrame.includes(parseInt(cells[1]))) {
+                            continue;
+                        }
                         if (this[pu].line[i] === 3) {
                             sol[1].push(i + ",1");
                         } else if (this[pu].line[i] === 30) {
@@ -3721,6 +3698,12 @@ class Puzzle {
                             break;
                         case "loopline":
                             for (var i in this[pu].line) {
+                                // Ignoring the half cells standred line marks
+                                let cells = i.split(",");
+                                if (this.cellsoutsideFrame.includes(parseInt(cells[0])) &&
+                                    this.cellsoutsideFrame.includes(parseInt(cells[1]))) {
+                                    continue;
+                                }
                                 if (this["pu_q"].line[i] && this.ignored_line_types[this["pu_q"].line[i]]) {
                                     // Ignore the line
                                 } else {
@@ -5894,11 +5877,17 @@ class Puzzle {
                 text += col_size + ' ' + row_size + '\n';
 
                 //Tapa clues
+                let cell_v;
                 if (!isEmptycontent("pu_q", "number", 2, "4")) {
                     for (var j = 2; j < this.ny0 - 2; j++) {
                         for (var i = 2; i < this.nx0 - 2; i++) {
-                            if (this.pu_q.number[i + j * (this.nx0)] && this.pu_q.number[i + j * (this.nx0)][2] === "4" && !isNaN(this.pu_q.number[i + j * (this.nx0)][0])) {
-                                text += this.pu_q.number[i + j * (this.nx0)][0].split('').sort().join('');
+                            if (this.pu_q.number[i + j * (this.nx0)]) {
+                                cell_v = this.pu_q.number[i + j * (this.nx0)];
+                                if (cell_v[2] === "4" && (pu.only_alphanumeric(cell_v[0]) || cell_v[0].includes("?"))) {
+                                    text += cell_v[0].split('').sort().join('');
+                                } else {
+                                    text += ".";
+                                }
                             } else {
                                 text += ".";
                             }
@@ -6037,7 +6026,7 @@ class Puzzle {
                                 this.pu_q.symbol[i + j * (this.nx0)] &&
                                 !isNaN(this.pu_q.symbol[i + j * (this.nx0)][0]) &&
                                 this.pu_q.symbol[i + j * (this.nx0)][1].substring(0, 6) === "square") {
-                                if (this.pu_q.symbol[i + j * (this.nx0)][0] === 2 || this.pu_q.symbol[i + j * (this.nx0)][0] === 9) {
+                                if (this.pu_q.symbol[i + j * (this.nx0)][0] === 2) {
                                     clueshade = 'b';
                                 } else if (this.pu_q.symbol[i + j * (this.nx0)][0] === 8) {
                                     clueshade = 'w';
@@ -7667,12 +7656,12 @@ class Puzzle {
                 console.log(this);
             } else {
                 text += 'Error - It doesnt support puzzle type ' + header + '\n' +
-                    'Please see instructions (link in the bottom) for supported puzzle types\n' +
+                    'Please see instructions (Help) for supported puzzle types\n' +
                     'For additional genre support please submit your request to penpaplus@gmail.com';
             }
         } else {
             text += 'Error - Enter the Puzzle type in Header area\n' +
-                'Please see instructions (link in the bottom) for supported puzzle types\n';
+                'Please see instructions (Help) for supported puzzle types\n';
         }
 
         return text;
@@ -8216,7 +8205,6 @@ class Puzzle {
             if (timestamp > this.replaycutoff) {
                 timestamp = null;
             }
-
             if ((arr === "thermo" || arr === "nobulbthermo" || arr === "arrows" || arr === "direction" || arr === "squareframe" || arr === "killercages") && num === -1) {
                 this.pu_a.command_replay.push([arr, num, null, this.mode.qa, groupcounter, timestamp]);
                 this.pu_a_col.command_replay.push([arr, num, null, this.mode.qa + "_col", groupcounter]);
@@ -8233,13 +8221,13 @@ class Puzzle {
                 }
             } else {
                 if (this.pu_a[arr][num]) {
-                    this.pu_a.command_replay.push([arr, num, this.pu_a[arr][num], this.mode.qa, groupcounter, timestamp]); // Array is also recorded in JSON
+                    this.pu_a.command_replay.push([arr, num, structuredClone(this.pu_a[arr][num]), this.mode.qa, groupcounter, timestamp]); // Array is also recorded in JSON
                     if ((this.gridtype === "square" || this.gridtype === "sudoku" || this.gridtype === "kakuro" || this.gridtype === "hex") &&
                         (arr === "thermo" || arr === "arrows" || arr === "direction" || arr === "squareframe" || arr === "surface" || arr === "wall" || arr === "symbol" ||
                             arr === "line" || arr === "lineE" || arr === "polygon" || arr === "freeline" || arr === "freelineE" || arr === "cage" || arr === "killercages")) { // Update this as more support for custom colors are added
-                        this.pu_a_col.command_replay.push([arr, num, this.pu_a_col[arr][num], this.mode.qa + "_col", groupcounter]); // Array is also recorded in JSON
+                        this.pu_a_col.command_replay.push([arr, num, structuredClone(this.pu_a_col[arr][num]), this.mode.qa + "_col", groupcounter]); // Array is also recorded in JSON
                     } else {
-                        this.pu_a_col.command_replay.push([arr, num, this.pu_a[arr][num], this.mode.qa + "_col", groupcounter]); // Array is also recorded in JSON
+                        this.pu_a_col.command_replay.push([arr, num, structuredClone(this.pu_a[arr][num]), this.mode.qa + "_col", groupcounter]); // Array is also recorded in JSON
                     }
                 } else {
                     this.pu_a.command_replay.push([arr, num, null, this.mode.qa, groupcounter, timestamp]);
@@ -8261,7 +8249,7 @@ class Puzzle {
         var str_num = "1234567890";
 
         // If ZXCV is disabled
-        if (UserSettings.disable_shortcuts == 2) {
+        if (!UserSettings.shortcuts_enabled) {
             var str_all = "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
         } else {
             var str_all = "1234567890qwertuiopasdfghjklbnmQWERTYUIOPASDFGHJKLZXCVBNM";
@@ -9859,7 +9847,7 @@ class Puzzle {
     mouse_symbol(x, y, num) {
         if (this.mouse_mode === "down_left") {
             this.cursol = num;
-            if (document.getElementById('panel_button').value === "1" && !this.onoff_symbolmode_list[this.mode[this.mode.qa].symbol[0]]) {
+            if (UserSettings.panel_shown && !this.onoff_symbolmode_list[this.mode[this.mode.qa].symbol[0]]) {
                 if (0 <= panel_pu.edit_num && panel_pu.edit_num <= 8) {
                     this.key_number((panel_pu.edit_num + 1).toString());
                 } else if (panel_pu.edit_num === 9) {
@@ -12673,25 +12661,33 @@ class Puzzle {
         /*cursol*/
         if (this.mode[this.mode.qa].edit_mode === "number" || this.mode[this.mode.qa].edit_mode === "symbol") {
             set_line_style(this.ctx, 99);
-            if (this.mode[this.mode.qa].edit_mode === "symbol" && document.getElementById('panel_button').value === "1" && !pu.onoff_symbolmode_list[pu.mode[this.mode.qa].symbol[0]]) {
+            if (this.mode[this.mode.qa].edit_mode === "symbol" && UserSettings.panel_shown && !pu.onoff_symbolmode_list[pu.mode[this.mode.qa].symbol[0]]) {
                 this.ctx.strokeStyle = Color.BLUE_DARK_VERY;
             }
             this.ctx.fillStyle = Color.TRANSPARENTBLACK;
             if (this.mode[this.mode.qa].edit_mode === "number" && (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3" || this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "9")) {
-                this.draw_polygon(this.ctx, this.point[this.cursolS].x, this.point[this.cursolS].y, 0.2, 4, 45);
+                if (this.cursolS) {
+                    this.draw_polygon(this.ctx, this.point[this.cursolS].x, this.point[this.cursolS].y, 0.2, 4, 45);
+                } else {
+                    this.default_cursol();
+                }
             } else if (UserSettings.draw_edges) {
                 this.draw_polygon(this.ctx, this.point[this.cursol].x, this.point[this.cursol].y, 0.2, 4, 45);
             } else {
-                this.ctx.beginPath();
-                this.ctx.moveTo(this.point[this.point[this.cursol].surround[0]].x, this.point[this.point[this.cursol].surround[0]].y);
-                for (var j = 1; j < this.point[this.cursol].surround.length; j++) {
-                    this.ctx.lineTo(this.point[this.point[this.cursol].surround[j]].x, this.point[this.point[this.cursol].surround[j]].y);
-                }
-                this.ctx.closePath();
-                this.ctx.stroke();
-                this.ctx.fill();
+                this.default_cursol();
             }
         }
+    }
+
+    default_cursol() {
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.point[this.point[this.cursol].surround[0]].x, this.point[this.point[this.cursol].surround[0]].y);
+        for (var j = 1; j < this.point[this.cursol].surround.length; j++) {
+            this.ctx.lineTo(this.point[this.point[this.cursol].surround[j]].x, this.point[this.point[this.cursol].surround[j]].y);
+        }
+        this.ctx.closePath();
+        this.ctx.stroke();
+        this.ctx.fill();
     }
 
     draw_conflicts() {
@@ -12882,15 +12878,15 @@ class Puzzle {
                     if (text === this.solution && this.sol_flag === 0) {
                         let message = document.getElementById("custom_message").value;
                         if (message == "" || message.includes("http-equiv=")) {
-                            message = "Congratulations 🙂";
+                            message = Branding.solveDefaultMessage;
                         }
                         setTimeout(() => {
                             Swal.fire({
-                                // title: '<h3 class="wish">Happy New Year 2022 🙂</h3>',
+                                title: Branding.solveTitle ? '<h3 class="wish">' + Branding.solveTitle + '</h3>' : undefined,
                                 html: '<h2 class="wish">' + message + '</h2>',
                                 background: 'url(js/images/new_year.jpg)',
                                 icon: 'success',
-                                confirmButtonText: 'Hurray!',
+                                confirmButtonText: Branding.solveOKButtonText,
                                 // timer: 5000
                             })
                         }, 20);
@@ -12918,15 +12914,15 @@ class Puzzle {
                         if (user_sol === author_sol && this.sol_flag === 0) {
                             let message = document.getElementById("custom_message").value;
                             if (message == "" || message.includes("http-equiv=")) {
-                                message = "Congratulations 🙂";
+                                message = Branding.solveDefaultMessage;
                             }
                             setTimeout(() => {
                                 Swal.fire({
-                                    // title: '<h3 class="wish">Happy New Year 2022 🙂</h3>',
+                                    title: Branding.solveTitle ? '<h3 class="wish">' + Branding.solveTitle + '</h3>' : undefined,
                                     html: '<h2 class="wish">' + message + '</h2>',
                                     background: 'url(js/images/new_year.jpg)',
                                     icon: 'success',
-                                    confirmButtonText: 'Hurray!',
+                                    confirmButtonText: Branding.solveOKButtonText,
                                 })
                             }, 20);
                             sw_timer.pause();
@@ -12961,59 +12957,87 @@ class Puzzle {
         let pcolor = 1; //black
         let scolor = 9; //blue, 2 for green
 
-        // Data checking
-        // Check if length is a square number
-        if (Number.isInteger(Math.sqrt(iostring.length))) {
-
-            // Replace dots with zeros
-            iostring = iostring.replace(/\./g, 0);
-
-            let digits = iostring.split("");
-            let size = Math.sqrt(iostring.length);
-
-            // check all are digits or alphabets
-            if (!pu.only_alphanumeric(iostring)) {
-                document.getElementById("iostring").value = "Error: it contains non-alpha-numeric characters";
-                return "failed";
+        // Replace spaces if user desires. Keep line breaks if using non-square mode.
+        if (document.getElementById("sudokuIgnoreSpaces").checked) {
+            if (document.getElementById("sudokuIgnoreNotSquare").checked) {
+                iostring = iostring.replace(' ', '');
+            } else {
+                iostring = iostring.replace(/\s/g, '');
             }
+        }
 
-            // Data check passed, proceed
-            let r_start = parseInt(document.getElementById("nb_space1").value, 10); // over white space
-            let c_start = parseInt(document.getElementById("nb_space3").value, 10); // left white space
+        // Replace dots with zeros
+        iostring = iostring.replace(/\./g, 0);
 
-            // if user has defined the starting cell then use that
-            if (document.getElementById("firstcell_row").value !== "") {
-                r_start = parseInt(document.getElementById("firstcell_row").value) - 1;
-            }
-            if (document.getElementById("firstcell_column").value !== "") {
-                c_start = parseInt(document.getElementById("firstcell_column").value) - 1;
-            }
+        let digits = iostring.split("");
+        let size = Math.sqrt(iostring.length);
 
-            if (this.mode.qa === "pu_q") {
-                for (var j = r_start; j < (size + r_start); j++) { //  row
-                    for (var i = c_start; i < (size + c_start); i++) { // column
-                        if (parseInt(digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], 10) !== 0) {
-                            this.record("number", (i + 2) + ((j + 2) * this.nx0));
-                            this[this.mode.qa].number[(i + 2) + ((j + 2) * this.nx0)] = [digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], pcolor, "1"];
-                        }
-                    }
-                }
-            } else if (this.mode.qa === "pu_a") {
-                for (var j = r_start; j < (size + r_start); j++) { //  row
-                    for (var i = c_start; i < (size + c_start); i++) { // column
-                        if (parseInt(digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], 10) !== 0) {
-                            if (!(this["pu_q"].number[(i + 2) + ((j + 2) * this.nx0)])) {
-                                this.record("number", (i + 2) + ((j + 2) * this.nx0));
-                                this[this.mode.qa].number[(i + 2) + ((j + 2) * this.nx0)] = [digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], scolor, "1"];
-                            }
-                        }
-                    }
-                }
-            }
+        // check all are digits or alphabets (or spacing)
+        if (!document.getElementById("sudokuIgnoreNotSquare").checked && !pu.only_alphanumeric(iostring)) {
+            document.getElementById("sudokuIOFail").classList.remove('is_hidden');
+            return "failed";
+        } else if (document.getElementById("sudokuIgnoreNotSquare").checked && !(/^[A-Za-z0-9\s]*$/.test(iostring))) {
+            document.getElementById("sudokuIOFail").classList.remove('is_hidden');
+            return "failed";
         } else {
+            document.getElementById("sudokuIOFail").classList.add('is_hidden');
+        }
+
+        // Data check passed, proceed
+        let r_start = parseInt(document.getElementById("nb_space1").value, 10); // over white space
+        let c_start = parseInt(document.getElementById("nb_space3").value, 10); // left white space
+
+        // if user has defined the starting cell then use that
+        if (document.getElementById("firstcell_row").value !== "") {
+            r_start = parseInt(document.getElementById("firstcell_row").value) - 1;
+        }
+        if (document.getElementById("firstcell_column").value !== "") {
+            c_start = parseInt(document.getElementById("firstcell_column").value) - 1;
+        }
+
+        if (!document.getElementById("sudokuIgnoreNotSquare").checked && !Number.isInteger(Math.sqrt(iostring.length))) {
             document.getElementById("iostring").value = "Error: Number of digits is not a perfect square";
             return "failed";
         }
+
+        // Helper method
+        const placeChar = function(thisRef, x, y, char, color) {
+            thisRef.record("number", x + y);
+            thisRef[thisRef.mode.qa].number[x + y] = [char, color, "1"];
+        };
+
+        let colorToUse = this.mode.qa === "pu_q" ? pcolor : scolor;
+
+        if (document.getElementById("sudokuIgnoreNotSquare").checked) {
+            // Ignoring square rule, use line breaks to do import.
+            let j = r_start;
+            let i = c_start;
+            let nextChar;
+            for (let k = 0; k < digits.length; k++) {
+                nextChar = digits[k];
+                if (nextChar.charCodeAt(0) === 10) {
+                    i = c_start;
+                    j++;
+                } else {
+                    if (this.mode.qa === "pu_q" || !(this["pu_q"].number[(i + 2) + ((j + 2) * this.nx0)])) {
+                        placeChar(this, i + 2, (j + 2) * this.nx0, nextChar, colorToUse);
+                    }
+                    i++;
+                }
+            }
+        } else if (Number.isInteger(Math.sqrt(iostring.length))) {
+            // Using classic square mode
+            for (var j = r_start; j < (size + r_start); j++) { //  row
+                for (var i = c_start; i < (size + c_start); i++) { // column
+                    if (parseInt(digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], 10) !== 0) {
+                        if (this.mode.qa === "pu_q" || !(this["pu_q"].number[(i + 2) + ((j + 2) * this.nx0)])) {
+                            placeChar(this, i + 2, (j + 2) * this.nx0, digits[j - r_start + i - c_start + (j - r_start) * (size - 1)], colorToUse);
+                        }
+                    }
+                }
+            }
+        }
+
         this.redraw();
     }
 
@@ -13157,45 +13181,6 @@ class Puzzle {
     get_customcolor() {
         let customcolor = $("#colorpicker_special").spectrum("get");
         return "rgba(" + Math.round(customcolor._r) + "," + Math.round(customcolor._g) + "," + Math.round(customcolor._b) + "," + customcolor._a + ")";
-    }
-
-    set_allmodes(displaytype = "none") {
-        for (var i of penpa_modes["square"]['mode']) {
-            document.getElementById("mo_" + i + "_lb").style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['sub']) {
-            document.getElementById("sub_" + i + "_lb").style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['customcolor']) {
-            document.getElementById(i).style.display = (displaytype === 'inline-block') ? 'table-row' : displaytype;
-        }
-        for (var i of penpa_modes["square"]['ms']) {
-            document.getElementById("ms_" + i).parentElement.style.display = (displaytype === 'inline-block') ? 'list-item' : displaytype;
-        }
-        for (var i of penpa_modes["square"]['ms1']) {
-            document.getElementById("ms1_" + i).parentElement.style.display = (displaytype === 'inline-block') ? 'list-item' : displaytype;
-        }
-        for (var i of penpa_modes["square"]['ms3']) {
-            document.getElementById("ms3_" + i).parentElement.style.display = (displaytype === 'inline-block') ? 'list-item' : displaytype;
-        }
-        for (var i of penpa_modes["square"]['shapemodes']) {
-            document.getElementById(i).style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['combisub']) {
-            document.getElementById("combisub_" + i).parentElement.style.display = (displaytype === 'inline-block') ? 'list-item' : displaytype;
-        }
-        for (var i of penpa_modes["square"]['subcombi']) {
-            document.getElementById(i).style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['top_buttons']) {
-            document.getElementById(i).style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['exceptions']) {
-            document.getElementById(i).style.display = displaytype;
-        }
-        for (var i of penpa_modes["square"]['li']) {
-            document.getElementById("li_" + i).style.display = displaytype;
-        }
     }
 
     check_conflict(current_sol) {
