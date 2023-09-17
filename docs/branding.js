@@ -18,7 +18,7 @@ const Branding = {
         // "Submission Rules for GMPuzzles": "https://tinyurl.com/GMPuzzlesFormatting"
     },
 
-    googleTag: 'G-2WQYM10ZE7'
+    googleTag: null
 };
 
 (function  () {
