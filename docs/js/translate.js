@@ -90,7 +90,7 @@ function trans() {
         "address_edit": ["編集URL", "URL for editing"],
         "address_solve": ["出題用URL", "URL for solving"],
         "address_comp": ["コンテスト用URL", "Contest-Mode URL"],
-        "expansion": ["拡張出力", "Extra options"],
+        "expansion": ["拡張出力", "URL with Answer Check / Advanced Options"],
         "closeBtn_save1": ["コピー", "Copy"],
         "closeBtn_save2": ["ダウンロード", "Download"],
         "closeBtn_save3": ["開く", "Open"],
@@ -138,9 +138,9 @@ function trans() {
         "sub_number1_lb": ["通常", "Normal"],
         "sub_number2_lb": ["矢印", "Arrow"],
         "sub_number9_lb": ["", ""],
-        "sub_number10_lb": ["大", "Big"],
-        "sub_number6_lb": ["中", "Middle"],
-        "sub_number5_lb": ["小", "Small"],
+        "sub_number10_lb": ["大", "L"],
+        "sub_number6_lb": ["中", "M"],
+        "sub_number5_lb": ["小", "S"],
         "sub_number8_lb": ["長文", "Long"],
         "sub_number7_lb": ["候補", "Candidates"],
         "sub_cage2_lb": ["自由", "Free"],
@@ -437,6 +437,7 @@ const PenpaText = {
         'nb_gridtype13_lb',
         'nb_rules_lb',
         'nb_title_lb',
+        'settings_modal_header',
         'lb_settings_app_display',
         'lb_settings_display_theme',
         'lb_settings_display_theme_light',
@@ -578,8 +579,8 @@ const PenpaText = {
         },
 
         puzzlink_row_column: {
-            EN: 'Penpa+ does not support grid size greater than 65 rows or columns',
-            JP: 'Penpa+は65行を超えるサイズに対応していません。'
+            EN: 'Penpa+ does not support grid size greater than $v rows or columns',
+            JP: 'Penpa+は $v 行を超えるサイズに対応していません。'
         },
         puzzlink_not_supported: {
             EN: 'It currently does not support puzzle type: $v',
@@ -587,6 +588,7 @@ const PenpaText = {
         },
 
         // Settings
+        settings_modal_header: { EN: 'General Settings', JP: '一般設定' },
         lb_settings_app_display: { EN: 'App Display', JP: '画面表示' },
         lb_settings_display_theme: { EN: 'Display Theme:', JP: '明るさ' },
         lb_settings_display_theme_light: { EN: 'Light', JP: 'ライト' },
@@ -885,6 +887,7 @@ const PenpaText = {
             "Line Normal", "Line Diagonal", "Line Free", "Line Middle", "Line Helper",
             "Edge Normal", "Edge Diagonal", "Edge Free", "Edge Helper", "Edge Erase",
             "Wall",
+            "Move All",
             "Number Normal", "Number L", "Number M", "Number S", "Candidates", "Number 1/4", "Number Side",
             "Sudoku Normal", "Sudoku Corner", "Sudoku Centre",
             "Shape",
@@ -895,6 +898,7 @@ const PenpaText = {
             "線 通常", "線 対角線", "線 自由線", "線 中線", "線 補助x",
             "辺 通常", "辺 対角線", "辺 自由線", "辺 補助x", "辺 枠消",
             "壁",
+            "移動 全",
             "数字 通常", "数字 大", "数字 中", "数字 小", "数字 候補", "数字 1/4", "数字 辺",
             "数独 通常", "数独 角", "数独 中央",
             "記号",
@@ -905,6 +909,7 @@ const PenpaText = {
             "sub_line1", "sub_line2", "sub_line3", "sub_line5", "sub_line4",
             "sub_lineE1", "sub_lineE2", "sub_lineE3", "sub_lineE4", "sub_lineE5",
             "wall",
+            "sub_move1",
             "sub_number1", "sub_number10", "sub_number6", "sub_number5", "sub_number7", "sub_number3", "sub_number9",
             "sub_sudoku1", "sub_sudoku2", "sub_sudoku3",
             "symbol",

@@ -163,7 +163,7 @@ class Puzzle {
             ["\"__a\"", "z_"],
             ["null", "zO"],
         ];
-        this.version = [3, 1, 3]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 1, 4]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -183,6 +183,7 @@ class Puzzle {
         this.replaycutoff = 60 * 60 * 1000; // 60 minutes
         this.surface_2_edge_types = ['pentominous', 'araf', 'spiralgalaxies', 'fillomino', 'compass'];
         this.isReplay = false;
+        this.linedrawing = false; // Used for lineox composite mode
     }
 
     reset() {
@@ -403,7 +404,7 @@ class Puzzle {
         this.reset_pause_layer();
 
         // set the style and font
-        if (UserSettings.color_theme == 1) {
+        if (UserSettings.color_theme == THEME_LIGHT) {
             pause_ctx.fillStyle = Color.BLUE;
         } else {
             pause_ctx.fillStyle = Color.WHITE;
@@ -1860,12 +1861,8 @@ class Puzzle {
         text += this.__export_checker_shared();
 
         // Custom Answer Message
-        if (this.solution) {
-            let custom_message = document.getElementById("custom_message").value;
-            text += "\n" + custom_message.replace(/\n/g, '%2D').replace(/,/g, '%2C').replace(/&/g, '%2E').replace(/=/g, '%2F');
-        } else {
-            text += "\n" + false;
-        }
+        let custom_message = document.getElementById("custom_message").value;
+        text += "\n" + custom_message.replace(/\n/g, '%2D').replace(/,/g, '%2C').replace(/&/g, '%2E').replace(/=/g, '%2F');
 
         for (var i = 0; i < this.replace.length; i++) {
             text = text.split(this.replace[i][0]).join(this.replace[i][1]);
@@ -2386,6 +2383,12 @@ class Puzzle {
                                     sol[4].push(i + "," + this[pu].number[i][0]);
                                 }
                             }
+                        } else if ($('#genre_tags_opt').select2("val").includes("non-alphanumeric")) {
+                            // ((Green or light blue or dark blue or red) and (Normal, M, S, L))
+                            if ((this[pu].number[i][1] === 2 || this[pu].number[i][1] === 8 || this[pu].number[i][1] === 9 || this[pu].number[i][1] === 10) &&
+                                (this[pu].number[i][2] === "1" || this[pu].number[i][2] === "5" || this[pu].number[i][2] === "6" || this[pu].number[i][2] === "10")) {
+                                sol[4].push(i + "," + this[pu].number[i][0]);
+                            }
                         }
                     }
                 }
@@ -2547,6 +2550,12 @@ class Puzzle {
                                             } else {
                                                 temp_sol.push(i + "," + this[pu].number[i][0]);
                                             }
+                                        }
+                                    } else if ($('#genre_tags_opt').select2("val").includes("non-alphanumeric")) {
+                                        // ((Green or light blue or dark blue or red) and (Normal, M, S, L))
+                                        if ((this[pu].number[i][1] === 2 || this[pu].number[i][1] === 8 || this[pu].number[i][1] === 9 || this[pu].number[i][1] === 10) &&
+                                            (this[pu].number[i][2] === "1" || this[pu].number[i][2] === "5" || this[pu].number[i][2] === "6" || this[pu].number[i][2] === "10")) {
+                                            temp_sol.push(i + "," + this[pu].number[i][0]);
                                         }
                                     }
                                 }
@@ -7640,15 +7649,15 @@ class Puzzle {
                                 if (number !== "") {
                                     // S submode is 5, M submode is 6
                                     // dynamic (i.e. upto 5 digits larger size and then smaller size)
-                                    if (UserSettings.sudoku_centre_size === 1) {
+                                    if (UserSettings.sudoku_centre_size === SUDOKU_CENTRE_AUTO) {
                                         if (number.length > 5) {
                                             this[this.mode.qa].number[k] = [number, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1], "5"];
                                         } else {
                                             this[this.mode.qa].number[k] = [number, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1], "6"];
                                         }
-                                    } else if (UserSettings.sudoku_centre_size === 2) { // all large
+                                    } else if (UserSettings.sudoku_centre_size === SUDOKU_CENTRE_LARGE) { // all large
                                         this[this.mode.qa].number[k] = [number, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1], "6"];
-                                    } else if (UserSettings.sudoku_centre_size === 3) { // all small
+                                    } else if (UserSettings.sudoku_centre_size === SUDOKU_CENTRE_SMALL) { // all small
                                         this[this.mode.qa].number[k] = [number, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1], "5"];
                                     }
                                 } else {
@@ -9666,9 +9675,9 @@ class Puzzle {
                     if (this.ondown_key === "mousedown") { // do only star when on laptop
                         this.re_combi_star_reduced(num);
                     } else {
-                        if (UserSettings.starbattle_dots === 3) {
+                        if (UserSettings.starbattle_dots === STAR_DOTS_DISABLED) {
                             num = this.coord_p_edgex_star(x, y, 0);
-                        } else if (UserSettings.starbattle_dots === 2) {
+                        } else if (UserSettings.starbattle_dots === STAR_DOTS_LOW) {
                             num = this.coord_p_edgex_star(x, y, 0.2);
                         }
                         this.re_combi_star(num); // Behave as normal when ipad and phone
@@ -9748,9 +9757,9 @@ class Puzzle {
                     this.re_combi_akari_downright(num);
                     break;
                 case "star":
-                    if (UserSettings.starbattle_dots === 3) {
+                    if (UserSettings.starbattle_dots === STAR_DOTS_DISABLED) {
                         num = this.coord_p_edgex_star(x, y, 0);
-                    } else if (UserSettings.starbattle_dots === 2) {
+                    } else if (UserSettings.starbattle_dots === STAR_DOTS_LOW) {
                         num = this.coord_p_edgex_star(x, y, 0.2);
                     }
                     this.re_combi_star_downright(num);
@@ -10155,6 +10164,9 @@ class Puzzle {
                 array = "line";
                 var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
                 this.re_line(array, key, line_style);
+
+                // To track if user is drawing line or just placing symbols
+                this.linedrawing = true;
             }
             this.last = num;
             this.redraw();
@@ -10171,7 +10183,7 @@ class Puzzle {
             secondsymbol = [1, "ox_E", 2];
         }
 
-        if (this.point[num].type === 0 && this.last === num && this.first === num) {
+        if (this.point[num].type === 0 && this.last === num && this.first === num && !this.linedrawing) {
             if (!this[this.mode.qa].symbol[num]) {
                 this.record("symbol", num);
                 this[this.mode.qa].symbol[num] = firstsymbol;
@@ -10187,6 +10199,7 @@ class Puzzle {
             }
         }
         this.drawing_mode = -1;
+        this.linedrawing = false;
         this.first = -1;
         this.last = -1;
         this.redraw();
@@ -12542,7 +12555,7 @@ class Puzzle {
     }
 
     check_conflict(current_sol) {
-        if (UserSettings.conflict_detection > 1) {
+        if (UserSettings.show_conflicts) {
             // User has disabled conflict detection.
             this.conflict_cells = [];
             return;

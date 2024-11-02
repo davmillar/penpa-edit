@@ -1268,7 +1268,9 @@ function advancecontrol_off(loadtype) {
     if (user_choices.indexOf("Box") === -1) {
         document.getElementById("mo_board_lb").classList.add('is_hidden');
     }
-    if (user_choices.indexOf("Move") === -1) {
+    if (user_choices.indexOf("Move All") === -1 &&
+        user_choices.indexOf("Move Numbers") === -1 &&
+        user_choices.indexOf("Move Shapes") === -1) {
         document.getElementById("mo_move_lb").classList.add('is_hidden');
     }
 }
@@ -1599,7 +1601,7 @@ function savetext_copy() {
     }
 
     // This needs to go after the copy takes place or else some browsers will not allow the copy.
-    infoMsg('<h2 class="info">' + PenpaText('copied_success') + '</h2>');
+    infoMsg('<h2 class="info">' + PenpaText.get('copied_success') + '</h2>');
 }
 
 function savetext_download() {
@@ -1742,7 +1744,7 @@ function export_sudoku() {
             errorMsg = PenpaText.get('sudoku_import_size_error');
         }
     } else {
-        errorMsg = PenpaText.get('sudoku_import_square_error');    
+        errorMsg = PenpaText.get('sudoku_import_square_error');
     }
 
     if (errorMsg) {
@@ -2298,7 +2300,7 @@ function load(urlParam, type = 'url', origurl = null) {
     if (rtext[13]) {
         let parsedValue = JSON.parse(rtext[13]);
         if (parsedValue === "true" || parsedValue === 1) {
-            UserSettings.custom_colors_on = 2;
+            UserSettings.custom_colors_on = true;
         }
     }
 
@@ -3086,8 +3088,8 @@ function decode_puzzlink(url) {
     cols = parseInt(urldata[1]);
     rows = parseInt(urldata[2]);
 
-    if ((cols > 65) || (rows > 65)) {
-        errorMsg(PenpaText.get('puzzlink_row_column'));
+    if ((cols > pu.gridmax['square']) || (rows > pu.gridmax['square'])) {
+        errorMsg(PenpaText.get('puzzlink_row_column', pu.gridmax['square'].toString()));
         return;
     }
 
