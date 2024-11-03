@@ -1,4 +1,36 @@
 ## History
+* 2024/07/16 ver 3.1.4
+	* Code refactoring.
+	* Added non-alphanumeric genre tag to allow answer check on non-alphanumeric characters.
+	* Language Support added for Japanese.
+* 2023/12/31 ver 3.1.3
+	* Render Tapa as Quad for certain conditions.
+	* New composite mode directed loop.
+	* Improved the composite modes blpo, blwh, lineox, edgexoi, tents, magnets, hashi.
+* 2023/12/27 ver 3.1.2
+	* code clean up and refactoring.
+	* detect if local storage is off or disabled in the browser and accordingly disable this feature in penpa.
+	* Reset Merry Christmas Message.
+* 2023/12/26 ver 3.1.1
+	* Cleaned up available penpa modes for relevant board types.
+	* Improve UserSettings around Local Storage.
+	* Fixed I/O Sudoku Text Area visibility in dark mode.
+	* Code rehaul and improvements for custom colors. Preview symbols in Panel with custom color. Custom color added for Triangle, Pyramid, Cube, Kakuro, Truncated square, Snub square, Cairo pentagonal, Rhombitrihexagonal, Deltoidal trihexagonal. Fixed custom color with transparancy.
+	* Fixed selection of unavailable sub mode or symbol. Rare but could cause corruption and unresponsive puzzle.
+	* Handle empty centerlist for old links. Added protection from removing the last cell using Box mode.
+	* Make puzzle progress saving more robust, especially on mobile browsers.
+* 2023/12/25 ver 3.0.11
+	* code refactoring of board resizing feature. Solution check/ undo/ redo are retained even after board resizing.
+	* Fix battleship composite mode. Avoid duplicating undo commands.
+	* Polygon shape improvements.
+* 2023/12/02 ver 3.0.10
+	* User input sanitization to prevent XSS attacks.
+	* Arrow circle without arrow single cell added to arrowsums option.
+	* moved gtag code back to html file as Adblock Ultimate was blocking Identity.js file for some users.
+* 2023/09/24 ver 3.0.9
+    * New options in Screenshot to include Author and Rules for png and jpeg. svg support not included.
+    * Use new clipboard API when able. (Fixes Copy on iOS.)
+    * Minor bug fixes and code refactoring.
 * 2023/07/28 ver 3.0.8
 	* Updated jquery, sweetalert to latest.
 	* Fixed the bug of correctly deleteing cagearrays.
@@ -9,7 +41,7 @@
 	* Fixed ? in tapa gmpuzzles output text, minor display improvements.
 	* Code cleanup
 	* Improved sudoku string IO to add whitespace suppression option and import non-square text blocks.
-	* Separated branding for easy access in future to other applications.
+	* Separated Identity for easy access in future to other applications.
 * 2023/05/03 ver 3.0.7
 	* Diagonal connection shape for killer cages with rotation fix.
 	* Tweaked display for mobile devices.

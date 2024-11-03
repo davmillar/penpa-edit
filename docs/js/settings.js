@@ -1,5 +1,11 @@
 const THEME_LIGHT = 1;
 const THEME_DARK = 2;
+const SUDOKU_CENTRE_AUTO = 1;
+const SUDOKU_CENTRE_LARGE = 2;
+const SUDOKU_CENTRE_SMALL = 3;
+const STAR_DOTS_HIGH = 1;
+const STAR_DOTS_LOW = 2;
+const STAR_DOTS_DISABLED = 3;
 
 function getCookie(name) {
     var v = document.cookie.match('(^|;) ?' + name + '=([^;]*)(;|$)');
@@ -72,6 +78,19 @@ const UserSettings = {
         return this._mousemiddle_button;
     },
 
+    // Toggle language
+    _language: 'EN',
+    set app_language(newValue) {
+        this._language = newValue;
+
+        document.getElementById("language_opt").value = newValue;
+        trans();
+        this.attemptSave();
+    },
+    get app_language() {
+        return this._language;
+    },
+
     // Conflict detection
     _conflict_detection: 1,
     set conflict_detection(newValue) {
@@ -86,9 +105,14 @@ const UserSettings = {
         } else {
             deleteCookie('conflict_detection');
         }
+
+        pu.redraw();
     },
     get conflict_detection() {
         return this._conflict_detection;
+    },
+    get show_conflicts() {
+        return this._conflict_detection > 1
     },
 
     // Star Battle Dot handling
@@ -129,6 +153,9 @@ const UserSettings = {
     get sudoku_normal_size() {
         return this._sudoku_normal_size;
     },
+    get sudoku_normal_bottom() {
+        return this._sudoku_normal_size === 2;
+    },
 
     _sudoku_centre_size: 1,
     set sudoku_centre_size(newValue) {
@@ -143,40 +170,21 @@ const UserSettings = {
     },
 
     _custom_colors_on: false,
-    _custom_color_supported_grids: {
-        square: 1,
-        sudoku: 1,
-        kakuro: 1,
-        hex: 1
-    },
-    _custom_color_supported_modes: {
-        line: 1,
-        lineE: 1,
-        wall: 1,
-        surface: 1,
-        cage: 1,
-        special: 1,
-        symbol: 1
-    },
     set custom_colors_on(newValue) {
-        if (typeof newValue === 'string') {
-            const valueInt = newValue ? parseInt(newValue, 10) : 1;
-            this._custom_colors_on = (valueInt === 2);
-        } else {
-            this._custom_colors_on = !!newValue;
-        }
+        const stringValue = String(newValue);
+        const valueInt = (stringValue === 'true' || stringValue === '2') ? 2 : 1;
+
+        this._custom_colors_on = (valueInt === 2);
 
         if (this._custom_colors_on) {
             // On
             let mode = pu.mode[pu.mode.qa].edit_mode;
-            if (this._custom_color_supported_grids[pu.gridtype] && this._custom_color_supported_modes[mode]) {
-                document.getElementById('style_special').style.display = 'inline';
-            }
+            pu.mode_set(mode); // Update mode UI, including custom color selector
         } else {
             // Off
             document.getElementById('style_special').style.display = 'none';
         }
-        document.getElementById("custom_color_opt").value = this._custom_colors_on ? '2' : '1';
+        document.getElementById("custom_color_opt").value = valueInt;
 
         pu.redraw();
     },
@@ -184,38 +192,50 @@ const UserSettings = {
         return this._custom_colors_on;
     },
 
-    _local_storage: 1,
+    // This setting is for whether the user wants local storage to be used at all, ever
+    _local_storage: true,
     set local_storage(newValue) {
-        const valueInt = newValue ? parseInt(newValue, 10) : 1;
-        this._local_storage = valueInt;
+        const valueString = String(newValue);
+        const valueInt = (valueString === 'true' || valueString === '1') ? 1 : 4;
 
-        document.getElementById("clear_storage_opt").value = valueInt;
-        switch (valueInt) {
-            case 1:
-                deleteCookie('local_storage');
-                break;
-            case 4:
-                setCookie('local_storage', valueInt, 2147483647);
-                break;
-        }
+        this._local_storage = (valueInt === 1);
+
+        document.getElementById("allow_local_storage").value = valueInt;
+        this.attemptSave();
     },
     get local_storage() {
         return this._local_storage;
     },
 
+    // This setting is for whether the current puzzle should be saved
+    _save_current_puzzle: undefined,
+    set save_current_puzzle(newValue) {
+        this._save_current_puzzle = newValue;
+    },
+    get save_current_puzzle() {
+        // Check if we explicitly set this puzzle to not allow saving to local storage.
+        if (this._save_current_puzzle !== undefined) {
+            return this._save_current_puzzle;
+        }
+
+        // Default to whether saving is turned on in general.
+        return this._local_storage;
+    },
+
     _reload_button: 2,
     set reload_button(newValue) {
-        if (newValue === "ON") { newValue = 1; }
-        if (newValue === "OFF") { newValue = 2; }
+        const valueString = String(newValue);
+        let valueInt = 2;
 
-        const valueInt = newValue ? parseInt(newValue, 10) : 2;
+        if (valueString === "ON" || valueString === 'true' || valueString === '1') { valueInt = 1; }
+
         this._reload_button = valueInt;
 
         document.getElementById("reload_button").value = valueInt;
         this.attemptSave();
     },
     get reload_button() {
-        return this._reload_button;
+        return this._reload_button === 1;
     },
 
     _shortcuts_enabled: 1,
@@ -283,11 +303,11 @@ const UserSettings = {
 
         if (valueInt > 90) {
             valueInt = 90;
-            infoMsg('Display Size must be in the range <h2 class="warn">12-90</h2> It is set to max value.');
+            infoMsg(PenpaText.get('display_size_max'));
         }
         if (valueInt < 12) {
             valueInt = 12;
-            infoMsg('Display Size must be in the range <h2 class="warn">12-90</h2> It is set to min value.');
+            infoMsg(PenpaText.get('display_size_min'));
         }
 
         this._displaysize = valueInt;
@@ -304,7 +324,7 @@ const UserSettings = {
     set draw_edges(newValue) {
         const button = document.getElementById("edge_button");
         this._draw_edges = newValue;
-        button.textContent = newValue ? "ON" : "OFF";
+        button.textContent = PenpaText.get(newValue ? "on" : "off");
 
         if (window.pu) {
             if (!newValue) {
@@ -322,7 +342,7 @@ const UserSettings = {
     set show_solution(newValue) {
         const button = document.getElementById("visibility_button");
         this._show_solution = newValue;
-        button.textContent = newValue ? "ON" : "OFF";
+        button.textContent = PenpaText.get(newValue ? "on" : "off");
 
         if (window.pu) {
             pu.redraw();
@@ -383,19 +403,21 @@ const UserSettings = {
     },
 
     can_save: [
+        'app_language',
         'color_theme',
+        'conflict_detection',
         'custom_colors_on',
+        'local_storage',
         'mousemiddle_button',
+        'quick_panel_button',
         'reload_button',
         'responsive_mode',
-        'starbattle_dots',
         'secondcolor',
+        'shorten_links',
+        'starbattle_dots',
         'sudoku_centre_size',
         'sudoku_normal_size',
-        'timerbar_status',
-        'conflict_detection',
-        'shorten_links',
-        'quick_panel_button'
+        'timerbar_status'
     ],
     gridtype_size: [
         'gridtype',
@@ -412,7 +434,7 @@ const UserSettings = {
         deleteCookie('tab_settings');
         // deleteCookie("different_solution_tab");
 
-        infoMsg('You must reload the page for the default settings to take effect.');
+        infoMsg(PenpaText.get('clear_settings_message'));
     },
 
     _settingsLoaded: false,
@@ -435,12 +457,10 @@ const UserSettings = {
 
     loadFromCookies: function(load = "others") {
         if (load === "others") {
-            let foundCookie;
             this.can_save.forEach(function(setting) {
                 let cookieQuery = getCookie(setting);
                 if (cookieQuery !== null) {
                     UserSettings[setting] = cookieQuery;
-                    foundCookie = 1;
                 }
             });
 
@@ -452,10 +472,6 @@ const UserSettings = {
                     advancecontrol_onoff("url");
                 }
             }
-
-            // Check for local storage setting
-            let cookieQuery = getCookie('local_storage');
-            UserSettings['local_storage'] = cookieQuery;
 
             this._settingsLoaded = true;
         } else {

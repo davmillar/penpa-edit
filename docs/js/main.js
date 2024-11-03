@@ -5,6 +5,7 @@ let isShiftKeyHeld = e => e.shiftKey;
 let isShiftKeyPressed = key => key === "Shift";
 let isAltKeyHeld = e => e.altKey;
 let isAltKeyPressed = key => key === "Alt";
+let localStorageAvailable = false;
 
 onload = function() {
 
@@ -14,6 +15,23 @@ onload = function() {
     let is_iPad = (!(ua.toLowerCase().match("iphone")) && ua.maxTouchPoints > 1);
     let is_iPad2 = (navigator.platform === "MacIntel" && typeof navigator.standalone !== "undefined");
     let is_iPad3 = (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    try {
+        if (window.localStorage) {
+            window.localStorage.setItem('test', 123);
+            localStorageAvailable = (window.localStorage.getItem('test') === "123");
+            window.localStorage.removeItem('test');
+        }
+    } catch (e) {
+        localStorageAvailable = false;
+    }
+
+    if (!localStorageAvailable) {
+        document.getElementById('allow_local_storage').classList.add('is_hidden');
+        document.getElementById('clear_storage_one').classList.add('is_hidden');
+        document.getElementById('clear_storage_all').classList.add('is_hidden');
+        document.getElementById('local_storage_browser_message').classList.remove('is_hidden');
+    }
 
     if (ua.indexOf('iPhone') > 0 || ua.indexOf('Android') > 0 && ua.indexOf('Mobile') > 0) {
         ondown_key = "touchstart";
@@ -26,19 +44,20 @@ onload = function() {
 
     // Declare custom color picker
     $(colorpicker_special).spectrum({
-        type: "component",
+        type: "color",
         preferredFormat: "hex",
         showInput: true,
         chooseText: "OK",
         // cancelText: "No way",
         // showAlpha: true,
-        // allowAlpha: true,
-        // allowEmpty: true,
+        allowAlpha: true,
+        allowEmpty: true,
+        showInitial: true,
         togglePaletteOnly: true,
         togglePaletteMoreText: 'more',
         togglePaletteLessText: 'less',
         showPalette: true,
-        hideAfterPaletteSelect: true,
+        // hideAfterPaletteSelect: true,
         maxSelectionSize: 8,
         showSelectionPalette: true,
         palette: [
@@ -52,6 +71,7 @@ onload = function() {
         ],
         localStorageKey: "spectrum.homepage", // Any Spectrum with the same string will share selection, data stored locally in the browser
     });
+    $(colorpicker_special).on('change', function(e, color) { pu.update_customcolor(color ? color.toRgbString() : color); });
 
     boot();
 
@@ -72,7 +92,7 @@ onload = function() {
     document.addEventListener("keyup", onKeyUp, { passive: false });
 
     let restrict_grids = ["square", "sudoku", "kakuro"];
-    let restrict_modes = ["line", "linex", "lineox", "yajilin", "rassisillai"];
+    let restrict_modes = ["line", "linex", "linedir", "lineox", "yajilin", "rassisillai"];
 
     function restrict_mouse(num) {
         let current_mode = pu.mode[pu.mode.qa].edit_mode;
@@ -110,10 +130,12 @@ onload = function() {
                 if (event.button === 2) { // right click
                     pu.mouse_mode = "down_right";
                     pu.mouse_click = 2;
+                    pu.mouse_click_last = 2;
                     pu.mouseevent(x, y, num, isCtrlKeyHeld(e));
                 } else { // Left click or tap
                     pu.mouse_mode = "down_left";
                     pu.mouse_click = 0;
+                    pu.mouse_click_last = 1;
                     pu.mouseevent(x, y, num, isCtrlKeyHeld(e));
                 }
             }
@@ -202,39 +224,6 @@ onload = function() {
         e.preventDefault();
     }
 
-    // Variables for Tab selector
-    let modes = ["Surface",
-        "Line Normal", "Line Diagonal", "Line Free", "Line Middle", "Line Helper",
-        "Edge Normal", "Edge Diagonal", "Edge Free", "Edge Helper", "Edge Erase",
-        "Wall",
-        "Number Normal", "Number L", "Number M", "Number S", "Candidates", "Number 1/4", "Number Side",
-        "Sudoku Normal", "Sudoku Corner", "Sudoku Centre",
-        "Shape",
-        "Special", "Thermo", "Sudoku Arrow",
-        "Composite"
-    ];
-
-    let modes_text = ["Surface",
-        "Line Normal", "Line Diagonal", "Line Free", "Line Middle", "Line Helper",
-        "Edge Normal", "Edge Diagonal", "Edge Free", "Edge Helper", "Edge Erase",
-        "Wall",
-        "Number Normal", "Number L", "Number M", "Number S", "Candidates", "Number 1/4", "Number Side",
-        "Sudoku Normal", "Sudoku Corner", "Sudoku Centre",
-        "Shape",
-        "Special", "Thermo", "Sudoku Arrow",
-        "Composite"
-    ];
-
-    let modes_mapping = ["surface",
-        "sub_line1", "sub_line2", "sub_line3", "sub_line5", "sub_line4",
-        "sub_lineE1", "sub_lineE2", "sub_lineE3", "sub_lineE4", "sub_lineE5",
-        "wall",
-        "sub_number1", "sub_number10", "sub_number6", "sub_number5", "sub_number7", "sub_number3", "sub_number9",
-        "sub_sudoku1", "sub_sudoku2", "sub_sudoku3",
-        "symbol",
-        "special", "sub_specialthermo", "sub_specialarrows",
-        "combi"
-    ];
     let previous_length = 2;
     let counter_index = 0;
     let present_submode;
@@ -280,7 +269,7 @@ onload = function() {
         var str_num = "1234567890";
         var str_alph_low = "abcdefghijklmnopqrstuvwxyz";
         var str_alph_up = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        var str_sym = "!\"#$%&\'()-=^~|@[];+:*,.<>/?_£§¤";
+        var str_sym = "!\"#$%&\'()-=^~|@[];+:*,.<>/?_£§¤\\{}";
 
         // check for caps lock
         var capslock = false;
@@ -304,7 +293,9 @@ onload = function() {
             number_release_time = -1e5;
         }
 
-        if (key === '?' && pu.mode[pu.mode.qa].edit_mode !== "number") {
+        if (key === '?' &&
+            pu.mode[pu.mode.qa].edit_mode !== "number" &&
+            pu.mode[pu.mode.qa].edit_mode !== "sudoku") {
             show_shortcuts();
             e.returnValue = false;
             return;
@@ -611,11 +602,11 @@ onload = function() {
                 } else {
                     counter_index++;
                 }
-                counter_index %= user_choices.length
-                let mode_loc = modes.indexOf(user_choices[counter_index]);
+                counter_index %= user_choices.length;
+                let mode_loc = PenpaText.modes.EN.indexOf(user_choices[counter_index]);
 
                 // Surface, Shape, Wall, Composite Modes, remaining choices are related to submodes
-                let mode_name = modes_mapping[mode_loc];
+                let mode_name = PenpaText.modes.mapping[mode_loc];
                 if (mode_name.includes("surface") ||
                     mode_name.includes("wall") ||
                     mode_name.includes("symbol") ||
@@ -635,6 +626,9 @@ onload = function() {
                         e.preventDefault();
                     } else if (mode_name.includes("special")) {
                         pu.mode_set('special');
+                        e.preventDefault();
+                    } else if (mode_name.includes("move")) {
+                        pu.mode_set('move');
                         e.preventDefault();
                     } else {
                         pu.mode_set('line');
@@ -702,19 +696,19 @@ onload = function() {
             if (pu.mode.qa != 'pu_q') {
                 if (pu.mmode == 'solve') {
                     Swal.fire({
-                        title: 'Are you sure to switch to Editing Mode?',
-                        html: 'You have pressed F2. You can either Cancel or later press F3 to switch back to Solving Mode.',
+                        title: PenpaText.get('f2_title'),
+                        html: PenpaText.get('f2_body'),
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: Color.BLUE_SKY,
                         cancelButtonColor: Color.RED,
-                        confirmButtonText: 'Yes, Switch'
+                        confirmButtonText: PenpaText.get('f2_confirm')
                     }).then((result) => {
                         if (result.isConfirmed) {
                             pu.mode_qa("pu_q");
                             document.getElementById('dvique').style.borderColor = Color.BLACK_LIGHT;
                             var title = document.getElementById("title");
-                            title.innerHTML = "Setter Mode (while Solving)";
+                            title.textContent = PenpaText.get('setter_mode_while_solving');
                         }
                     })
                 } else {
@@ -730,21 +724,21 @@ onload = function() {
             if (pu.mode.qa != 'pu_a') {
                 if (pu.mmode == 'solve') {
                     Swal.fire({
-                        title: 'Are you sure to switch to Solving Mode?',
+                        title: PenpaText.get('f3_title'),
                         icon: 'warning',
                         showCancelButton: true,
                         confirmButtonColor: Color.BLUE_SKY,
                         cancelButtonColor: Color.RED,
-                        confirmButtonText: 'Yes, Switch'
+                        confirmButtonText: PenpaText.get('f2_confirm')
                     }).then((result) => {
                         if (result.isConfirmed) {
                             pu.mode_qa("pu_a");
                             document.getElementById('dvique').style.borderColor = Color.GREEN_LIGHT;
                             var title = document.getElementById("title");
                             if (pu.solution) {
-                                title.innerHTML = "Solver Mode (Answer Checking Enabled)";
+                                title.innerHTML = PenpaText.get('solver_mode_answer');
                             } else {
-                                title.innerHTML = "Solver Mode";
+                                title.innerHTML = PenpaText.get('solver_mode');
                             }
                         }
                     })
@@ -782,38 +776,37 @@ onload = function() {
 
         var key = e.key;
         const keylocation = e.location;
-        if (keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
-            if (isShiftKeyPressed(key)) {
-                if (present_submode === "1") {
-                    pu.submode_check("sub_sudoku1");
-                } else if (present_submode === "2") {
-                    pu.submode_check("sub_sudoku2");
-                } else if (present_submode === "3") {
-                    pu.submode_check("sub_sudoku3");
-                }
-                shift_counter = 0;
-                shift_release_time = Date.now();
+        if (isShiftKeyPressed(key) && keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
+            if (present_submode === "1") {
+                pu.submode_check("sub_sudoku1");
+            } else if (present_submode === "2") {
+                pu.submode_check("sub_sudoku2");
+            } else if (present_submode === "3") {
+                pu.submode_check("sub_sudoku3");
+            }
+            shift_counter = 0;
+            shift_release_time = Date.now();
+            e.returnValue = false;
+        } else if (isCtrlKeyPressed(key) && keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
+            if (present_submode === "1") {
+                pu.submode_check("sub_sudoku1");
+            } else if (present_submode === "2") {
+                pu.submode_check("sub_sudoku2");
+            } else if (present_submode === "3") {
+                pu.submode_check("sub_sudoku3");
+            }
+            ctrl_counter = 0;
+            ctrl_release_time = Date.now();
+            e.returnValue = false;
+        } else if (pu.mode[pu.mode.qa].edit_mode === "surface") { // shortcut for styles in surface mode
+            if (key === "1") {
+                number_release_time = Date.now();
+                previousdigit1 = true;
                 e.returnValue = false;
-            } else if (isCtrlKeyPressed(key)) {
-                if (present_submode === "1") {
-                    pu.submode_check("sub_sudoku1");
-                } else if (present_submode === "2") {
-                    pu.submode_check("sub_sudoku2");
-                } else if (present_submode === "3") {
-                    pu.submode_check("sub_sudoku3");
-                }
-                ctrl_counter = 0;
+            } else {
+                previousdigit1 = false;
+                number_release_time = -1e5;
                 e.returnValue = false;
-            } else if (pu.mode[pu.mode.qa].edit_mode === "surface") { // shortcut for styles in surface mode
-                if (key === "1") {
-                    number_release_time = Date.now();
-                    previousdigit1 = true;
-                    e.returnValue = false;
-                } else {
-                    previousdigit1 = false;
-                    number_release_time = -1e5;
-                    e.returnValue = false;
-                }
             }
         }
     }
@@ -962,17 +955,24 @@ onload = function() {
     document.addEventListener("mousedown", window_click, { passive: false });
 
     function window_click(e) {
+        let eventTarget = e.target;
+        if (eventTarget.classList.contains('fa')) {
+            eventTarget = eventTarget.parentElement;
+        }
+
         var orientation;
         //modalwindow
-        if (e.target.className === "modal") {
-            document.getElementById(e.target.id).style.display = 'none';
+        if (eventTarget.className === "modal") {
+            document.getElementById(eventTarget.id).style.display = 'none';
             e.preventDefault();
         }
         if (!pu.ondown_key) {
             pu.ondown_key = ondown_key;
         }
-        if (pu.selection.length > 0 && e.target.id.indexOf("sub_sudoku") == -1 && e.target.id.indexOf("st_sudoku") == -1 &&
-            e.target.id != "float-canvas" && !isCtrlKeyHeld(e)) {
+        // This segment of code I added for a purpose but don't recollect the reason.
+        // After the new improvements maybe this is not needed but for now retaining it as it doesn't impact anything.
+        if (pu.selection.length > 0 && eventTarget.id.indexOf("sub_sudoku") == -1 && eventTarget.id.indexOf("st_sudoku") == -1 &&
+            eventTarget.id != "float-canvas" && !isCtrlKeyHeld(e)) {
             // clear selection
             pu.selection = [];
             pu.redraw();
@@ -995,7 +995,7 @@ onload = function() {
             }
         }
 
-        switch (e.target.id) {
+        switch (eventTarget.id) {
             //canvas
             case "canvas":
                 document.getElementById("inputtext").blur(); // Remove focus from text box
@@ -1701,10 +1701,10 @@ onload = function() {
                 // if user clicks on Check Solution button
                 if (pu.solution && pu.sol_flag === 0) {
                     Swal.fire({
-                        title: '<h3>Your solution is incorrect.</h3>',
-                        html: '<h2>' + Branding.incorrectMessage + '</h2>',
+                        title: '<h3>' + PenpaText.get('solution_incorrect_title') + '</h3>',
+                        html: '<h2>' + PenpaText.get('solution_incorrect_main') + '</h2>',
                         icon: 'error',
-                        confirmButtonText: Branding.okButtonText,
+                        confirmButtonText: PenpaText.get('ok'),
                     })
                     document.getElementById("pu_a_label").style.backgroundColor = Color.RED_LIGHT;
                 }
@@ -1747,28 +1747,9 @@ onload = function() {
 
                     document.getElementById("replay_download_btn").disabled = true;
                     document.getElementById("replay_message").style.display = "";
-                    document.getElementById("replay_message").innerHTML = "Preparing your download";
+                    document.getElementById("replay_message").innerHTML = PenpaText.get('preparing_download');
 
                     setTimeout(function() {
-                        function splitTextLines(ctx, text, maxWidth) {
-                            var words = text.split(" ");
-                            var lines = [];
-                            var currentLine = words[0];
-
-                            for (var i = 1; i < words.length; i++) {
-                                var word = words[i];
-                                var width = ctx.measureText(currentLine + " " + word).width;
-                                if (width < maxWidth) {
-                                    currentLine += " " + word;
-                                } else {
-                                    lines.push(currentLine);
-                                    currentLine = word;
-                                }
-                            }
-                            lines.push(currentLine);
-                            return lines;
-                        }
-
                         //put the title text on the top
                         let main_c = $('#canvas')[0];
                         let main_ctx = main_c.getContext("2d");
@@ -1842,38 +1823,57 @@ onload = function() {
                 break;
         }
         // Main mode
-        if (e.target.id.slice(0, 3) === "mo_") {
-            pu.mode_set(e.target.id.slice(3, -3));
+        if (eventTarget.id.slice(0, 3) === "mo_") {
+            pu.mode_set(eventTarget.id.slice(3, -3));
             e.preventDefault();
         }
         // Sub mode
-        if (e.target.id.slice(0, 4) === "sub_") {
-            pu.submode_check(e.target.id.slice(0, -3));
+        if (eventTarget.id.slice(0, 4) === "sub_") {
+            pu.submode_check(eventTarget.id.slice(0, -3));
             e.preventDefault();
         }
         // Style mode
-        if (e.target.id.slice(0, 3) === "st_") {
-            pu.stylemode_check(e.target.id.slice(0, -3));
+        if (eventTarget.id.slice(0, 3) === "st_") {
+            pu.stylemode_check(eventTarget.id.slice(0, -3));
             e.preventDefault();
         }
         // Combination mode
-        if (e.target.id.slice(0, 9) === "combisub_") {
-            pu.subcombimode(e.target.id.slice(9));
+        if (eventTarget.id.slice(0, 9) === "combisub_") {
+            pu.subcombimode(eventTarget.id.slice(9));
             e.preventDefault();
         }
         // symbol
-        if (e.target.id.slice(0, 3) === "ms_") {
+        if (eventTarget.id.slice(0, 3) === "ms_") {
             checkms = 1;
-            pu.subsymbolmode(e.target.id.slice(3));
+            pu.subsymbolmode(eventTarget.id.slice(3));
             e.preventDefault();
             //Symbol hover etc
-        } else if (e.target.id.slice(0, 2) === "ms") {
+        } else if (eventTarget.id.slice(0, 2) === "ms") {
             checkms = 1;
             return;
         } else if (checkms === 1) {
             checkms = 0;
             return;
         }
+    }
+
+    function splitTextLines(ctx, text, maxWidth) {
+        var words = text.split(" ");
+        var lines = [];
+        var currentLine = words[0];
+
+        for (var i = 1; i < words.length; i++) {
+            var word = words[i];
+            var width = ctx.measureText(currentLine + " " + word).width;
+            if (width < maxWidth) {
+                currentLine += " " + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+        lines.push(currentLine);
+        return lines;
     }
 
     //panel(drag_window)
@@ -2009,56 +2009,30 @@ onload = function() {
         }
     }
 
-    let select = document.getElementById("mode_choices");
-    for (var i = 0; i < modes.length; i++) {
-        var option = document.createElement("option");
-        option.value = modes[i];
-        option.text = modes_text[i];
-        if (UserSettings.tab_settings) {
-
-            // Load the author defined tab settings if any
-            if (UserSettings.tab_settings.indexOf(modes[i]) > -1) {
-                option.setAttribute("selected", true);
-            }
-        }
-        select.appendChild(option);
-    }
-
-    selectBox = new vanillaSelectBox("#mode_choices", {
-        "disableSelectAll": false,
-        "maxHeight": 250,
-        "search": true,
-        "translations": { "all": "All", "items": "items", "selectAll": "Check All", "clearAll": "Clear All" }
-    }); //"placeHolder": "Surface" translations: { "items": "tab" } "maxWidth": 140
-
-    let selectContainer = document.getElementById('btn-group-#mode_choices').getElementsByClassName('vsb-menu')[0];
-    let liteModeButton = document.createElement('button');
-    liteModeButton.id = "tab-dropdown-lite-btn";
-    liteModeButton.disabled = true;
-    let tab_initial = getValues('mode_choices');
-    if (tab_initial.length > 0) {
-        liteModeButton.innerText = 'Disable Penpa Lite';
-        liteModeButton.disabled = false;
-    } else {
-        liteModeButton.innerText = 'Enable Penpa Lite';
-        liteModeButton.disabled = true;
-    }
-    liteModeButton.addEventListener('click', advancecontrol_toggle);
-    selectContainer.appendChild(liteModeButton);
+    PenpaUI.initPenpaLite();
 
     window.addEventListener('beforeunload', function(e) {
-        if (UserSettings.reload_button === 1) {
+        if (UserSettings.reload_button) {
             // Cancel the event
             e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
             // Chrome requires returnValue to be set
             e.returnValue = '';
         }
+        save_progress();
+    });
 
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "hidden") {
+            save_progress();
+        }
+    });
+
+    function save_progress() {
         // Save puzzle progress
-        let local_storage_setting = document.getElementById("clear_storage_opt").value;
-        if (pu.url.length !== 0 &&
+        if (localStorageAvailable &&
+            pu.url.length !== 0 &&
             pu.mmode === "solve" &&
-            local_storage_setting === "1" &&
+            UserSettings.save_current_puzzle &&
             !pu.replay) {
             // get md5 hash for unique id
             let hash = "penpa_" + md5(pu.url);
@@ -2068,7 +2042,7 @@ onload = function() {
 
             localStorage.setItem(hash, rstr);
         }
-    });
+    }
 
     // Adding on change events for general settings
     // Theme Setting
@@ -2091,6 +2065,10 @@ onload = function() {
         UserSettings.mousemiddle_button = this.value;
     }
 
+    document.getElementById("language_opt").onchange = function() {
+        UserSettings.app_language = this.value;
+    }
+
     document.getElementById("starbattle_settings_opt").onchange = function() {
         UserSettings.starbattle_dots = this.value;
     }
@@ -2108,11 +2086,11 @@ onload = function() {
     }
 
     document.getElementById("reload_button").onchange = function() {
-        UserSettings.reload_button = this.value;
+        UserSettings.reload_button = parseInt(this.value, 10) === 1;
     }
 
-    document.getElementById("clear_storage_opt").onchange = function() {
-        UserSettings.local_storage = this.value;
+    document.getElementById("allow_local_storage").onchange = function() {
+        UserSettings.local_storage = (parseInt(this.value, 10) === 1);
     }
 
     $(document).ready(function() {
@@ -2191,7 +2169,7 @@ onload = function() {
             if (penpa_constraints["border"].includes(current_constraint) && pu.borderwarning) {
                 pu.borderwarning = false;
                 Swal.fire({
-                    html: '<h2 class="info">To place clues on grid border/edges and corners:<br> Turn "Draw on Edges": ON</h2>',
+                    html: '<h2 class="info">' + PenpaText.get('border_setting_help') + '</h2>',
                     timer: 8000,
                     icon: 'info'
                 })
@@ -2204,19 +2182,20 @@ onload = function() {
         UserSettings.tab_settings = getValues('mode_choices');
 
         if (can_use_lite()) {
-            liteModeButton.disabled = false;
+            PenpaUI.liteModeButton.disabled = false;
 
             // Dynamically updating the display of modes based on tab setting changes
-            if (liteModeButton.innerText === "Disable Penpa Lite") {
+            let currentState = PenpaUI.liteModeButton.getAttribute('data-mode');
+
+            if (currentState === "disable") {
                 advancecontrol_on(); // First display back everything
                 advancecontrol_off("new"); // apply new choices for penpa lite
             }
         } else {
             // Dynamically updating the display of modes based on tab setting changes
-            liteModeButton.innerText = "Enable Penpa Lite";
             advancecontrol_on();
 
-            liteModeButton.disabled = true;
+            PenpaUI.liteModeButton.disabled = true;
         }
     }
 
@@ -2225,10 +2204,14 @@ onload = function() {
         panel_onoff();
     }
 
+    // Quick Panel Toggle Setting
+    document.getElementById("quick_panel_dropdown").onchange = function() {
+        UserSettings.quick_panel_button = String(this.value) === "1";
+    }
+
     // Conflict detection
     document.getElementById("conflict_detection_opt").onchange = function() {
         UserSettings.conflict_detection = this.value;
-        pu.redraw();
     }
 
     // Enable or Disable Shortcuts
@@ -2271,13 +2254,13 @@ function clear_storage_one() {
         let hash = "penpa_" + md5(pu.url);
         localStorage.removeItem(hash);
         Swal.fire({
-            html: '<h2 class="info">Local Storage is Cleared</h2>',
+            html: '<h2 class="info">' + PenpaText.get('local_storage_cleared') + '</h2>',
             icon: 'info'
         });
     }
 
-    // turn off localstorage
-    UserSettings.local_storage = 3; // not using 4 because this is temporary state
+    // turn off localstorage for this puzzle
+    UserSettings.save_current_puzzle = false;
 }
 
 function clear_storage_all() {
@@ -2291,11 +2274,11 @@ function clear_storage_all() {
     }
     // localStorage.clear(); for all clear
 
-    // turn off localstorage
-    UserSettings.local_storage = 3; // not using 4 because this is temporary state
+    // turn off localstorage for current puzzle
+    UserSettings.save_current_puzzle = false;
 
     Swal.fire({
-        html: '<h2 class="info">Local Storage is Cleared</h2>',
+        html: '<h2 class="info">' + PenpaText.get('local_storage_cleared') + '</h2>',
         icon: 'info'
     });
 }
