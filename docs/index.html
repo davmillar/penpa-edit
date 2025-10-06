@@ -47,7 +47,7 @@
     <!-- STYLES -->
     <!-- Local styles -->
     <script>
-        var ver = "3.1.4"; // Also defined in class_p.js
+        var ver = "3.2.1"; // Also defined in class_p.js
         let style_sources = [
             "./css/font-awesome.min.css",
             "./css/light_theme.css",
@@ -141,7 +141,7 @@
     <!-- End Google Tag Manager (noscript) -->
     <header id="header">
         <span id="title">Setter Mode</span>
-        <span id="version-info">Penpa+ v<span id="version-number"></span> &copy; 2020-2024 <button id="page_help">Help</button></span>
+        <span id="version-info">Penpa+ v<span id="version-number"></span> &copy; 2020-2025 <button id="page_help">Help</button></span>
     </header>
     <div id="app-container">
         <div id="tool-container">
@@ -154,6 +154,7 @@
                     <button id="savetext">Share</button>
                     <a id="download_link"></a>
                     <button id="duplicate" onclick="duplicate();">Clone</button>
+                    <button id="edit_bg_image">Edit Background</button>
                     <button id="input_sudoku">I/O Sudoku</button>
                     <button id="input_url">Load</button>
                     <button id="page_settings"><i class="fa fa-cog"></i></button>
@@ -179,6 +180,8 @@
                         <label class="label_mode" id="mode_txt">Mode:</label>
                         <input type="radio" name="mode" id="mo_surface" checked="checked" />
                         <label for="mo_surface" class="label" id="mo_surface_lb">Surface</label>
+                        <input type="radio" name="mode" id="mo_multicolor" />
+                        <label for="mo_multicolor" class="label" id="mo_multicolor_lb">Multicolor</label>
                         <input type="radio" name="mode" id="mo_line" />
                         <label for="mo_line" class="label" id="mo_line_lb">Line</label>
                         <input type="radio" name="mode" id="mo_lineE" />
@@ -544,6 +547,12 @@
                             <label for="sub_sudoku3" class="labelSu" id="sub_sudoku3_lb">Centre</label>
                         </span>
                     </div>
+                    <div id="style_combi" style="display:none;">
+                        <span class="combimode_display">
+                            <span id="panel_buttonc0" class="label">Selection:</span>
+                            <b><span id="combimode_content" class="combimode_content">blpo</span></b>
+                        </span>
+                    </div>
                     <div id="stylemode_button">
                         <span>
                             <label class="label_mode tooltip" id="style_txt">Style:<span id="style_text" class="tooltiptext">Choose one style</span></label>
@@ -673,12 +682,6 @@
                             <span class="symbolmode_display">
                                 <span id="panel_buttons0" class="label">Selection:</span>
                                 <b><span id="symmode_content" class="symmode_content">circle_L</span></b>
-                            </span>
-                        </span>
-                        <span id="style_combi" style="display:none;">
-                            <span class="combimode_display">
-                                <span id="panel_buttonc0" class="label">Selection:</span>
-                                <b><span id="combimode_content" class="combimode_content">blpo</span></b>
                             </span>
                         </span>
                         <span id="style_cage" style="display:none;">
@@ -818,6 +821,7 @@
                     <option value="cairo_pentagonal" id="nb_gridtype11_lb"> Cairo pentagonal </option>
                     <option value="rhombitrihexagonal" id="nb_gridtype12_lb"> Rhombitrihexagonal </option>
                     <option value="deltoidal_trihexagonal" id="nb_gridtype13_lb"> Deltoidal trihexagonal </option>
+                    <option value="penrose_P3" id="nb_gridtype14_lb"> Penrose P3 </option>
                 </select>
             </span><br>
             <h4><label class="label_nb" id="nb_size_lb">Size:</label></h4>
@@ -836,6 +840,8 @@
                 <span><label class="label_nb" id="nb_sudoku3_lb">Outside clues (top/left)</label></span>
                 <input type="checkbox" name="nb_sudoku3" id="nb_sudoku3">
                 <br>
+                <span><label class="label_nb" id="nb_penrose1_lb">Rotational asymmetry</label></span>
+                <input type="number" pattern="\d*" name="nb_penrose1" id="nb_penrose1" value="0" min="0" max="30" step="1">
                 <span><label class="label_nb" id="nb_sudoku8_lb">Size 4x4</label></span>
                 <input type="checkbox" name="nb_sudoku8" id="nb_sudoku8">
                 <span><label class="label_nb" id="nb_sudoku5_lb">Size 6x6</label></span>
@@ -843,6 +849,9 @@
                 <span><label class="label_nb" id="nb_sudoku6_lb">Size 8x8</label></span>
                 <input type="checkbox" name="nb_sudoku6" id="nb_sudoku6">
                 <br>
+                <span><label class="label_nb" id="nb_penrose2_lb">Tiling seed</label></span>
+                <input type="number" pattern="\d*" name="nb_penrose2" id="nb_penrose2" value="0.1" min="0.001" max="0.999" step="0.001" oninput="nb_penrose2_sl.value = nb_penrose2.value">
+                <input type="range" id="nb_penrose2_sl" value="0.1" min="0.001" max="0.999" step="0.001" oninput="nb_penrose2.value = nb_penrose2_sl.value">
                 <span><label class="label_nb" id="nb_sudoku7_lb"></label></span>
             </span>
             <br>
@@ -925,6 +934,61 @@
                     <button class="addbottom" id="rt_addbottom_r">+ &#9660;</button>
                     <button class="subbottom" id="rt_subbottom_r">&ndash; &#9650;</button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div id="modal-bg-image" class="modal">
+        <div id="modal-bg-image-content" class="modal-content">
+            <h3 class="modal-header">Set Background Image</h3>
+            <div>
+                <table style="width: 100%">
+                    <colgroup>
+                        <col width="50%" />
+                        <col width="50%" />
+                    </colgroup>
+                    <tr>
+                        <td colspan="2"><label id='bg_image_url_lb'>Image URL:</label></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><input type="text" id="bg_image_url" /> </td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_x_lb">X position:</label></td>
+                        <td><input type="text" value="0" id="bg_image_x" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_y_lb">Y position:</label></td>
+                        <td><input type="text" value="0" id="bg_image_y" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_width_lb">Width:</label></td>
+                        <td><input type="text" id="bg_image_width" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_height_lb">Height:</label></td>
+                        <td><input type="text" id="bg_image_height" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_opacity_lb">Opacity:</label></td>
+                        <td><input type="text" value="100" id="bg_image_opacity" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_foreground_lb">Draw in foreground:</label></td>
+                        <td><input type="checkbox" id="bg_image_foreground" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_mask_white_lb">Mask out white from image:</label></td>
+                        <td><input type="checkbox" id="bg_image_mask_white" /></td>
+                    </tr>
+                    <tr>
+                        <td><label id="bg_image_threshold_lb">White mask threshold:</label></td>
+                        <td><input type="text" value="240" id="bg_image_threshold" /></td>
+                    </tr>
+                </table>
+            </div>
+            <br>
+            <div class="nb_button">
+                <input type="button" id="closeBtn_bg_image" value="Close" />
             </div>
         </div>
     </div>
@@ -1022,9 +1086,9 @@
             <h3 class="modal-header" id="savetitle">Share Puzzle</h3>
             <h5 class="modal-subheader" id="saveinfo_lb">Puzzle Information</h5>
             <div id="modal-save-info">
-                <span class="DM"><span id="save1_lb">Title:</span><input type="text" placeholder="e.g. Thermo Sudoku or Yajilin" value="" id="saveinfotitle" class="right"></span>
+                <span class="DM"><span id="save1_lb">Title:</span><input type="text" placeholder="e.g. Thermo Sudoku or Yajilin" value="" id="saveinfotitle" class="right" onchange="update_title()"></span>
                 <br>
-                <span class="DM"><span id="save2_lb">Author:</span><input type="text" placeholder="Puzzle creator name" value="" id="saveinfoauthor"></span>
+                <span class="DM"><span id="save2_lb">Author:</span><input type="text" placeholder="Puzzle creator name" value="" id="saveinfoauthor" onchange="update_title()"></span>
                 <br>
                 <span class="DM"><span id="save3_lb">Rules:</span><textarea class="text_area" rows="1" cols="10" placeholder="e.g. Classic sudoku rules." value="" id="saveinforules"></textarea></span>
                 <br>
@@ -1091,6 +1155,17 @@
                     <table id="answersetting">
                         <tr>
                             <td>
+                                <span><label id="sol_surface_exact_lb">Surface - Match exact colors:</label></span>
+                            </td>
+                            <td class="solcheck_show_and">
+                                <input type="checkbox" name="solution" id="sol_surface_exact" class="solcheck">
+                            </td>
+                            <td class="solcheck_show_or">
+                                <input type="checkbox" name="solution" id="sol_or_surface_exact" class="solcheck_or">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <span><label id="sol_surface_lb">Shading - DG (Dark Grey), GR, LG, BL (Black):</label></span>
                             </td>
                             <td class="solcheck_show_and">
@@ -1113,7 +1188,15 @@
                         </tr>
                         <tr class="solcheck_show_and">
                             <td>
-                                <span><label id="sol_loopline_lb">Line - Green, Double:</label></span>
+                                <span><label id="sol_loopline_exact_lb">Line - Match exact styles:</label></span>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="solution" id="sol_loopline_exact" class="solcheck">
+                            </td>
+                        </tr>
+                        <tr class="solcheck_show_and">
+                            <td>
+                                <span><label id="sol_loopline_lb">Line - Green, Double only:</label></span>
                             </td>
                             <td>
                                 <input type="checkbox" name="solution" id="sol_loopline" class="solcheck">
@@ -1129,10 +1212,26 @@
                         </tr>
                         <tr class="solcheck_show_or">
                             <td>
+                                <span><label id="sol_loopline_exact_lb">Line - Match exact styles:</label></span>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="solution" id="sol_or_loopline_exact" class="solcheck_or">
+                            </td>
+                        </tr>
+                        <tr class="solcheck_show_or">
+                            <td>
                                 <span><label id="sol_or_loopline_lb">Line - Green, Double:</label></span>
                             </td>
                             <td>
                                 <input type="checkbox" name="solution_or" id="sol_or_loopline" class="solcheck_or">
+                            </td>
+                        </tr>
+                        <tr class="solcheck_show_and">
+                            <td>
+                                <span><label id="sol_loopedge_exact_lb">Edge - Match exact styles:</label></span>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="solution" id="sol_loopedge_exact" class="solcheck">
                             </td>
                         </tr>
                         <tr class="solcheck_show_and">
@@ -1149,6 +1248,14 @@
                             </td>
                             <td>
                                 <input type="checkbox" name="solution" id="sol_ignoreborder" class="solcheck">
+                            </td>
+                        </tr>
+                        <tr class="solcheck_show_or">
+                            <td>
+                                <span><label id="sol_loopedge_exact_lb">Edge - Match exact styles:</label></span>
+                            </td>
+                            <td>
+                                <input type="checkbox" name="solution" id="sol_or_loopedge_exact" class="solcheck_or">
                             </td>
                         </tr>
                         <tr class="solcheck_show_or">
@@ -1440,6 +1547,17 @@
                         </tr>
                         <tr>
                             <td>
+                                <label id="lb_settings_textoutline">Outline on Text:</label>
+                            </td>
+                            <td>
+                                <select name="outline_text" id="outline_text_opt">
+                                    <option value="1">ON</option>
+                                    <option value="0" selected="selected">OFF</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <label id="lb_settings_starbattle_dots">Star Battle Dots:</label>
                             </td>
                             <td>
@@ -1593,6 +1711,33 @@
                         </tr>
                         <tr>
                             <td>
+                                <label id="lb_settings_pencil_marks">Check pencil marks:</label>
+                            </td>
+                            <td>
+                                <select name="check_pencil_marks" id="check_pencil_marks_opt">
+                                    <option value="1">ON</option>
+                                    <option value="0" selected="selected">OFF</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="2" class="nb_button">
+                                <input type="button" id="saveinfogenre2" value="Edit tags for conflict checker" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label id="lb_settings_lineanycolor">Any color can match green line/edge in solution:</label>
+                            </td>
+                            <td>
+                                <select name="ignore_line_style" id="ignore_line_style_opt">
+                                    <option value="1">ON</option>
+                                    <option value="0" selected="selected">OFF</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
                                 <label id="lb_settings_sudoku_keys">Sudoku Z/Y & XCV Keys:</label>
                             </td>
                             <td>
@@ -1611,6 +1756,17 @@
                             </td>
                             <td>
                                 <button id="clear_settings" onclick="UserSettings.clearSettings()">Clear cookies</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <label>Auto-save puzzle in browser history:</label>
+                            </td>
+                            <td>
+                                <select name="auto_save_history" id="auto_save_history_opt">
+                                    <option value="1">ON</option>
+                                    <option value="0" selected="selected">OFF</option>
+                                </select>
                             </td>
                         </tr>
                         <tr>
@@ -1638,32 +1794,38 @@
             <div class="modal-inner-wrapper">
                 <div>
                     <ul>
-                        <li><kbd>Ctrl</kbd> + <kbd>Z</kbd>: Undo</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>Y</kbd>: Redo</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>D</kbd>: Clone</li>
-                        <li><kbd>Ctrl</kbd> + <kbd>I</kbd>: To copy the previous number/alphabet/symbol from Number mode with PANEL: ON</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>z</kbd>: Undo</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>y</kbd>: Redo</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>d</kbd>: Clone</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>i</kbd>: To copy the previous number/alphabet/symbol from Number mode with PANEL: ON</li>
                         <li><kbd>Ctrl</kbd> + <kbd>Space</kbd>: Delete numbers and symbols at the same time</li>
                         <li><kbd>Shift</kbd> + <kbd>Space</kbd>: Enter a space (Works in "Number" Mode => "L", "M", "S" and Long" SubMode options only)</li>
+                        <li><kbd>Ctrl</kbd> + <kbd>a</kbd>: Select all cells</li>
+                        <li><kbd>Alt</kbd> + <kbd>drag</kbd>: For rectangular selection</li>
                         <li><kbd>F2</kbd>: Problem mode</li>
                         <li><kbd>F3</kbd>: Solution mode</li>
                         <li><kbd>F4</kbd>: Hide/Show Timer</li>
                         <li><kbd>Tab</kbd> or <kbd>Enter</kbd>: Cycle Input Tools</li>
+                        <li><kbd>ESC</kbd>: To clear selection or exit open dialogues</li>
                         <li><kbd>?</kbd>: Show keyboard shortcuts</li>
                     </ul>
+                    <h5 class="modal-subheader">In Multicolor Mode</h5>
+                    <p>Use number keys <kbd>0</kbd> - <kbd>9</kbd> to fill colors in the selected cells. switch between styles. For styles 11 and 12, press <kbd>ALT</kbd>+<kbd>1</kbd> or <kbd>ALT</kbd>+<kbd>2</kbd> respectively.</p>
                 </div>
                 <div>
                     <h5 class="modal-subheader">In Sudoku Mode</h5>
                     <ul>
-                        <li><kbd>Z</kbd>: Normal Submode*</li>
-                        <li><kbd>X</kbd>: Corner Submode*</li>
-                        <li><kbd>C</kbd>: Centre Submode*</li>
-                        <li><kbd>V</kbd>: Shading (Surface Mode)*</li>
+                        <li><kbd>z</kbd>: Normal Submode*</li>
+                        <li><kbd>x</kbd>: Corner Submode*</li>
+                        <li><kbd>c</kbd>: Centre Submode*</li>
+                        <li><kbd>v</kbd>: Shading*</li>
                         <li><kbd>Shift</kbd>: For Temporary Corner Submode</li>
                         <li><kbd>Shift</kbd> + <kbd>Delete</kbd>: Deletes only corner pencil marks from the selected cells</li>
                         <li><kbd>Ctrl</kbd> - For Temporary Centre Submode / Selecting Multiple Cells/ Deselecting selected cells</li>
                         <li><kbd>Ctrl</kbd> + <kbd>Delete</kbd>: Deletes only centre pencil marks from the selected cells</li>
                         <li><kbd>Delete</kbd>: To delete all the contents of the cell</li>
                         <li><kbd>Space</kbd>: To delete only the selected submode contents. (E.g. If the cell contains both centre and corner pencil marks, and if the current submode selection is "Corner submode", the pressing Spacebar would delete only the corner pencil marks)</li>
+                        <li><kbd>Double click</kbd>: Double clicking the number in a cell will select all instances of that number. (applies to number mode as well)</li>
                     </ul>
                     <p class="modal-footnote">* These can be disabled from Settings.</p>
                     <h5 class="modal-subheader">In Surface Mode</h5>

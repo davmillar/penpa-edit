@@ -7,6 +7,8 @@ let isAltKeyHeld = e => e.altKey;
 let isAltKeyPressed = key => key === "Alt";
 let localStorageAvailable = false;
 
+const MULTICOLOR_REMAP = [10, 1, 8, 3, 4, 2, 5, 6, 7, 9, 0, 11, 12];
+
 onload = function() {
 
     // Detect mobile or Ipad beforing booting
@@ -41,6 +43,11 @@ onload = function() {
         ondown_key = "mousedown";
     }
     this.ondown_key = ondown_key;
+
+    // Update genre tags
+    $('#genre_tags_opt').on('change', function(event, callid) {
+        pu.update_genre_tags(callid);
+    });
 
     // Declare custom color picker
     $(colorpicker_special).spectrum({
@@ -111,13 +118,15 @@ onload = function() {
 
     function onDown(e) {
         if ((ondown_key === "mousedown" && e.button !== 1) || (ondown_key === "touchstart")) { // Ignore Middle button
-            if (e.type === "mousedown") {
+            if (e.type === "mousedown" || e.type === "dblclick") {
                 var event = e;
             } else {
                 var event = e.changedTouches[0];
                 e.preventDefault(); // When both mouse and touch start, only touch
             }
-            if (ondown_key === "mousedown" && event.button !== 2 && pu.mode[pu.mode.qa].edit_mode !== "sudoku") { // not right click and so improve the coordinate system for certain modes
+            if (ondown_key === "mousedown" && event.button !== 2 &&
+                pu.mode[pu.mode.qa].edit_mode !== "number" &&
+                pu.mode[pu.mode.qa].edit_mode !== "sudoku") { // not right click and so improve the coordinate system for certain modes
                 var obj = coord_point(event, 'flex');
             } else {
                 var obj = coord_point(event);
@@ -125,24 +134,36 @@ onload = function() {
             var x = obj.x,
                 y = obj.y,
                 num = obj.num;
+
+            let ctrl = isCtrlKeyHeld(e) || isShiftKeyHeld(e);
+
+            // Remember whether this cell was already in the selection so we can
+            // remove instead of add cells
+            pu.select_remove = ctrl && pu.selection.indexOf(num) !== -1;
+
             let skip_mouseevent = restrict_mouse(num);
             if (pu.point[num].use === 1 && !skip_mouseevent) {
-                if (event.button === 2) { // right click
+                if (e.type === "dblclick") {
+                    pu.mouse_mode = "down_left";
+                    pu.mouse_click = 0;
+                    pu.dblmouseevent(x, y, num, ctrl);
+                } else if (event.button === 2) { // right click
                     pu.mouse_mode = "down_right";
                     pu.mouse_click = 2;
                     pu.mouse_click_last = 2;
-                    pu.mouseevent(x, y, num, isCtrlKeyHeld(e));
+                    pu.mouseevent(x, y, num, ctrl, e, obj);
                 } else { // Left click or tap
                     pu.mouse_mode = "down_left";
                     pu.mouse_click = 0;
                     pu.mouse_click_last = 1;
-                    pu.mouseevent(x, y, num, isCtrlKeyHeld(e));
+                    pu.mouseevent(x, y, num, ctrl, e, obj);
                 }
             }
         }
     }
 
     function onUp(e) {
+        let edit_mode = pu.mode[pu.mode.qa].edit_mode;
         if ((ondown_key === "mousedown" && e.button !== 1) || (ondown_key === "touchstart")) { // Ignore Middle button
             if (e.type === "mouseup") {
                 var event = e;
@@ -150,9 +171,10 @@ onload = function() {
                 var event = e.changedTouches[0];
                 e.preventDefault(); // When both mouse and touch start, only touch
             }
-            if (ondown_key === "mousedown" && (pu.mode[pu.mode.qa].edit_mode === "combi") && // to handle mobile/ipad users for up events for certain modes
-                (pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0] === "yajilin" ||
-                    pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0] === "akari")) {
+            // to handle mobile/ipad users for up events for certain modes
+            if (ondown_key === "mousedown" && (edit_mode === "sudoku" || edit_mode === "number" ||
+                    (edit_mode === "combi" && (pu.mode[pu.mode.qa][edit_mode][0] === "yajilin" ||
+                        pu.mode[pu.mode.qa][edit_mode][0] === "akari")))) {
                 var obj = coord_point(event, 'flex');
             } else {
                 var obj = coord_point(event);
@@ -173,6 +195,7 @@ onload = function() {
     }
 
     function onMove(e) {
+        let edit_mode = pu.mode[pu.mode.qa].edit_mode;
         if ((ondown_key === "mousedown" && e.buttons !== 4) || (ondown_key === "touchstart")) { // Ignore Middle button
             if (e.type === "mousemove") {
                 var event = e;
@@ -180,15 +203,17 @@ onload = function() {
                 var event = e.changedTouches[0];
             }
             e.preventDefault();
+
             if (event.buttons === 2) { // Right click and moving
                 pu.mouse_click = 2;
                 var obj = coord_point(event, 'flex');
-            } else if ((ondown_key === "touchstart" || event.buttons === 1) && pu.mode[pu.mode.qa].edit_mode === "sudoku") { // Left click/Ipad and moving in Sudoku Mode
+            } else if ((ondown_key === "touchstart" || event.buttons === 1) &&
+                (edit_mode === "sudoku" || (edit_mode === "number" && pu.number_multi_enabled()))) { // Left click/Ipad and moving in Sudoku Mode
                 pu.mouse_click = 0;
-                var obj = coord_point(event, 'flex');
+                var obj = coord_point(event, 'flex', 'move');
             } else {
-                if (((pu.mode[pu.mode.qa].edit_mode === "combi") && (pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0] === "yajilin" ||
-                        pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0] === "akari"))) {
+                if (((edit_mode === "combi") && (pu.mode[pu.mode.qa][edit_mode][0] === "yajilin" ||
+                        pu.mode[pu.mode.qa][edit_mode][0] === "akari"))) {
                     var obj = coord_point(event, 'flex');
                 } else {
                     var obj = coord_point(event);
@@ -201,10 +226,32 @@ onload = function() {
             let skip_mouseevent = restrict_mouse(num);
             if (skip_mouseevent) {
                 onOut();
-            }
-            if (pu.point[num].use === 1 && !skip_mouseevent) {
-                pu.mouse_mode = "move";
-                pu.mouseevent(x, y, num);
+            } else if (pu.point[num].use === 1) {
+                // Handle alt+drag for rectangular selection
+                if (event.buttons > 0 && pu.rect_select_base !== null) {
+                    pu.selection = pu.old_selection.slice();
+                    let [nx, ny, _] = obj.index;
+                    let [ox, oy, __] = pu.rect_select_base;
+                    let [left, right] = [Math.min(nx, ox), Math.max(nx, ox)];
+                    let [top, bottom] = [Math.min(ny, oy), Math.max(ny, oy)];
+                    for (let xx = left; xx <= right; xx++) {
+                        for (let yy = top; yy <= bottom; yy++) {
+                            let n = (pu.nx0) * yy + xx;
+                            if (pu.point[n].use) {
+                                let index = pu.selection.indexOf(n);
+                                if (pu.select_remove) {
+                                    if (index !== -1)
+                                        pu.selection.splice(index, 1);
+                                } else if (index === -1)
+                                    pu.selection.push(n);
+                            }
+                        }
+                    }
+                    pu.redraw();
+                } else {
+                    pu.mouse_mode = "move";
+                    pu.mouseevent(x, y, num);
+                }
             }
         }
     }
@@ -226,12 +273,13 @@ onload = function() {
 
     let previous_length = 2;
     let counter_index = 0;
-    let present_submode;
+    let present_submode = null;
+    let present_mode = null;
+    let ctrl_counter = 0;
     let shift_counter = 0;
     let shift_numkey = false;
     let shift_release_time = -1e5;
     let shift_time_limit = 15; // milliseconds
-    let ctrl_counter = 0;
     let number_release_time = -1e5;
     let number_release_limit = 300; // milliseconds
     let previousdigit1 = false;
@@ -308,7 +356,7 @@ onload = function() {
             if (pu.mode[pu.mode.qa].edit_mode === "sudoku" && keylocation === 3) {
                 // Skip arrow behavior deliberately for sudoku numpad usage.
             } else {
-                pu.key_arrow(key, isCtrlKeyHeld(e));
+                pu.key_arrow(key, isCtrlKeyHeld(e) || isShiftKeyHeld(e));
                 e.returnValue = false;
             }
         }
@@ -317,9 +365,32 @@ onload = function() {
             return false;
         }
 
-        // All of this is specific to sudoku
-        if (pu.mode[pu.mode.qa].edit_mode === "sudoku") {
+        if (key === 'Escape') {
+            // Escape out of any modal dialogs if they're open
 
+            // Weird hack to make sure any sub-dialogs are exited first
+            const sub_modals = ["modal-save-tag", "modal-save2"];
+            let modals = [...document.getElementsByClassName('modal')];
+            modals.sort((a, b) => !sub_modals.includes(a.id) && sub_modals.includes(b.id));
+
+            for (var m of modals) {
+                if (m.style.display && m.style.display !== 'none') {
+                    e.preventDefault();
+                    m.style.display = 'none';
+                    return false;
+                }
+            }
+
+            pu.selection = [];
+            pu.redraw();
+            e.returnValue = false;
+            return false;
+        }
+
+        // In sudoku and multicolor modes, allow "mini" shortcuts of holding ctrl or shift
+        // to temporarily switch to center or corner marks. Only do this if we're not already
+        // in a temporary mode.
+        if ((pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
             // For shift shortcut in Sudoku mode, modify the numpad keys
             if (keylocation === 3 && !isShiftKeyPressed(key) && !isCtrlKeyHeld(e) && !isAltKeyHeld(e)) {
                 const numpadMap = {
@@ -425,6 +496,12 @@ onload = function() {
                                 break;
                         }
                     }
+                    // Remap color numbers to match the weird out-of-order colors of surface
+                    if (pu.mode[pu.mode.qa].edit_mode === "multicolor" &&
+                        key >= 0 && key <= MULTICOLOR_REMAP.length) {
+                        key = MULTICOLOR_REMAP[key];
+                        pu.stylemode_check('st_surface' + key);
+                    }
                     pu.key_number(key);
                 }
             } else if (key === " " || keycode === 46 || (keycode === 8 && pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
@@ -436,6 +513,28 @@ onload = function() {
                 pu.key_backspace();
                 e.returnValue = false;
             }
+        }
+
+        // Alt-number in multicolor mode goes to secondary colors (10 + n)
+        if (isAltKeyHeld(e) && !isCtrlKeyHeld(e) && !isShiftKeyHeld(e) &&
+            pu.mode[pu.mode.qa].edit_mode === "multicolor" && keycode >= 48 && keycode <= 57) {
+            // Subtract ASCII 0 and add in the 10 offset
+            key = keycode - 48 + 10;
+            if (key >= 0 && key <= MULTICOLOR_REMAP.length) {
+                // Remap color numbers to match the weird out-of-order colors of surface
+                key = MULTICOLOR_REMAP[key];
+                pu.stylemode_check('st_surface' + key);
+                pu.key_number(key);
+            }
+        }
+
+        // Map ctrl-shift-z to ctrl-y
+        if (isCtrlKeyHeld(e) && isShiftKeyHeld(e) && !isAltKeyHeld(e) && (key === "z" || key === "Z")) {
+            if (!pu.undoredo_disable) {
+                pu.redo();
+            }
+            e.returnValue = false;
+            return;
         }
 
         if (isCtrlKeyHeld(e) && !isShiftKeyHeld(e) && !isAltKeyHeld(e)) {
@@ -475,6 +574,17 @@ onload = function() {
                     }
                 }
                 switch (key) {
+                    case "a": //Ctrl+a
+                    case "A":
+                        // Don't trigger ctrl-a sequence if a target is selected (eg a textbox)
+                        if (e.target.id !== "") {
+                            e.returnValue = true;
+                            break;
+                        }
+                        pu.selection = pu.centerlist.slice();
+                        pu.redraw();
+                        e.returnValue = false;
+                        break;
                     case "d": //Ctrl+d
                     case "D":
                         duplicate();
@@ -516,7 +626,7 @@ onload = function() {
                                 }
                             } else if (panel_pu.panelmode === "alphabet" || panel_pu.panelmode === "alphabet_s") {
                                 if (0 <= panel_select && panel_select <= 27) {
-                                    pu.key_number(panel_pu.cont[panel_select].toString());
+                                    pu.key_number(panel_pu.cont[panel_select].toString(), true);
                                 } else if (panel_select === 28) {
                                     pu.key_number(" ");
                                 } else if (panel_select >= 29) {
@@ -608,6 +718,7 @@ onload = function() {
                 // Surface, Shape, Wall, Composite Modes, remaining choices are related to submodes
                 let mode_name = PenpaText.modes.mapping[mode_loc];
                 if (mode_name.includes("surface") ||
+                    mode_name.includes("multicolor") ||
                     mode_name.includes("wall") ||
                     mode_name.includes("symbol") ||
                     mode_name.includes("combi") ||
@@ -643,15 +754,18 @@ onload = function() {
     }
 
     const shortcutModeMap = {
-        "KeyZ": "sub_sudoku1",
-        "KeyX": "sub_sudoku2",
-        "KeyC": "sub_sudoku3"
+        "KeyZ": ["sudoku", "sub_sudoku1"],
+        "KeyX": ["sudoku", "sub_sudoku2"],
+        "KeyC": ["sudoku", "sub_sudoku3"],
+        "KeyV": ["surface"]
     };
 
     function checkShortcutKeys(e, code, capslock) {
-        if (pu.mode[pu.mode.qa].edit_mode !== "surface" && pu.mode[pu.mode.qa].edit_mode !== "sudoku") {
+        let mode = pu.mode[pu.mode.qa].edit_mode;
+        const allowed_modes = ["surface", "sudoku"];
+
+        if (!allowed_modes.includes(mode))
             return false;
-        }
 
         let detected = false;
 
@@ -659,29 +773,25 @@ onload = function() {
             let mappedCode = shortcutModeMap[code];
 
             if (mappedCode) {
-                let present_mode = document.getElementById("mo_sudoku").checked;
+                // Change to the main mode for this shortcut
+                let m = mappedCode[0];
+                let present_mode = document.getElementById("mo_" + m).checked;
                 if (!present_mode) {
-                    pu.mode_set("sudoku");
+                    pu.mode_set(m);
                     detected = true;
                 }
-                let present_submode = document.getElementById(mappedCode).checked;
-                if (!present_submode) {
-                    pu.submode_check(mappedCode);
-                    detected = true;
+
+                // Change to the submode if needed
+                if (mappedCode.length > 1) {
+                    let sm = mappedCode[1];
+                    let present_submode = document.getElementById(sm).checked;
+                    if (!present_submode) {
+                        pu.submode_check(sm);
+                        detected = true;
+                    }
                 }
                 e.returnValue = false;
             }
-
-            if (code === "KeyV") {
-                present_mode = document.getElementById("mo_surface").checked;
-                if (!present_mode) {
-                    pu.mode_set("surface");
-                    detected = true;
-                }
-                e.returnValue = false;
-            }
-
-            e.returnValue = false;
         }
 
         if (detected) {
@@ -775,29 +885,33 @@ onload = function() {
         }
 
         var key = e.key;
+
         const keylocation = e.location;
-        if (isShiftKeyPressed(key) && keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
-            if (present_submode === "1") {
-                pu.submode_check("sub_sudoku1");
-            } else if (present_submode === "2") {
-                pu.submode_check("sub_sudoku2");
-            } else if (present_submode === "3") {
-                pu.submode_check("sub_sudoku3");
+
+        // See if we're releasing the key that started a temporary mode override
+        if (keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
+            if (isShiftKeyPressed(key)) {
+                if (present_submode === "1") {
+                    pu.submode_check("sub_sudoku1");
+                } else if (present_submode === "2") {
+                    pu.submode_check("sub_sudoku2");
+                } else if (present_submode === "3") {
+                    pu.submode_check("sub_sudoku3");
+                }
+                shift_counter = 0;
+                shift_release_time = Date.now();
+                e.returnValue = false;
+            } else if (isCtrlKeyPressed(key)) {
+                if (present_submode === "1") {
+                    pu.submode_check("sub_sudoku1");
+                } else if (present_submode === "2") {
+                    pu.submode_check("sub_sudoku2");
+                } else if (present_submode === "3") {
+                    pu.submode_check("sub_sudoku3");
+                }
+                ctrl_counter = 0;
+                e.returnValue = false;
             }
-            shift_counter = 0;
-            shift_release_time = Date.now();
-            e.returnValue = false;
-        } else if (isCtrlKeyPressed(key) && keylocation !== 3 && pu.mode[pu.mode.qa].edit_mode === "sudoku") {
-            if (present_submode === "1") {
-                pu.submode_check("sub_sudoku1");
-            } else if (present_submode === "2") {
-                pu.submode_check("sub_sudoku2");
-            } else if (present_submode === "3") {
-                pu.submode_check("sub_sudoku3");
-            }
-            ctrl_counter = 0;
-            ctrl_release_time = Date.now();
-            e.returnValue = false;
         } else if (pu.mode[pu.mode.qa].edit_mode === "surface") { // shortcut for styles in surface mode
             if (key === "1") {
                 number_release_time = Date.now();
@@ -811,26 +925,25 @@ onload = function() {
         }
     }
 
-    function coord_point(e, fittype = 'none') {
+    function coord_point(e, fittype = 'none', eventmode = 'none') {
         var x = e.pageX - canvas.offsetLeft;
         var y = e.pageY - canvas.offsetTop;
         var min0, min = 10e6;
         var num = 0;
-        let type;
         var improve_modes = ["star", "yajilin", "mines", "doublemines", "akari"];
+        let edit_mode = pu.mode[pu.mode.qa].edit_mode;
+
+        let type = pu.type;
 
         // Improving starbattle composite mode, left click
         if (fittype === 'flex') {
-            if (((pu.mode[pu.mode.qa].edit_mode === "combi") &&
-                    (improve_modes.includes(pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0]))) ||
-                (pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
-                type = pu.type;
+            if ((edit_mode === "combi" && improve_modes.includes(pu.mode[pu.mode.qa][edit_mode][0])) ||
+                edit_mode === "sudoku" || edit_mode === "number")
                 pu.type = [0];
-            }
         }
 
         for (var i = 0; i < pu.point.length; i++) {
-            if (pu.point[i] && pu.type.indexOf(pu.point[i].type) != -1) {
+            if (pu.point[i] && type.indexOf(pu.point[i].type) != -1) {
                 min0 = (x - pu.point[i].x) ** 2 + (y - pu.point[i].y) ** 2;
                 if (min0 < min) {
                     min = min0;
@@ -841,11 +954,9 @@ onload = function() {
 
         // resetting the type for starbattle composite mode
         if (fittype === 'flex') {
-            if (((pu.mode[pu.mode.qa].edit_mode === "combi") &&
-                    (improve_modes.includes(pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0]))) ||
-                (pu.mode[pu.mode.qa].edit_mode === "sudoku")) {
+            if ((edit_mode === "combi" && improve_modes.includes(pu.mode[pu.mode.qa][edit_mode][0])) ||
+                edit_mode === "sudoku" || edit_mode === "number")
                 pu.type = type;
-            }
         }
 
         //const endTime = performance.now();
@@ -855,6 +966,7 @@ onload = function() {
         obj.x = x;
         obj.y = y;
         obj.num = num;
+        obj.index = pu.point[num].index;
         return obj;
     }
 
@@ -969,14 +1081,7 @@ onload = function() {
         if (!pu.ondown_key) {
             pu.ondown_key = ondown_key;
         }
-        // This segment of code I added for a purpose but don't recollect the reason.
-        // After the new improvements maybe this is not needed but for now retaining it as it doesn't impact anything.
-        if (pu.selection.length > 0 && eventTarget.id.indexOf("sub_sudoku") == -1 && eventTarget.id.indexOf("st_sudoku") == -1 &&
-            eventTarget.id != "float-canvas" && !isCtrlKeyHeld(e)) {
-            // clear selection
-            pu.selection = [];
-            pu.redraw();
-        }
+
         // Middle click for switching problem and solution
         // Applicable only in setter mode
         if (document.getElementById("title").textContent.toLowerCase().includes("setter")) {
@@ -1151,6 +1256,7 @@ onload = function() {
                 break;
                 //savetext
             case "saveinfogenre":
+            case "saveinfogenre2":
                 show_genretags();
                 e.preventDefault();
                 break;
@@ -1615,6 +1721,10 @@ onload = function() {
                 document.getElementById('modal-image').style.display = 'none';
                 e.preventDefault();
                 break;
+            case "closeBtn_bg_image":
+                document.getElementById('modal-bg-image').style.display = 'none';
+                e.preventDefault();
+                break;
                 //newboard
             case "nb_size1":
             case "nb_size2":
@@ -1832,9 +1942,14 @@ onload = function() {
             pu.submode_check(eventTarget.id.slice(0, -3));
             e.preventDefault();
         }
-        // Style mode
-        if (eventTarget.id.slice(0, 3) === "st_") {
-            pu.stylemode_check(eventTarget.id.slice(0, -3));
+        // Special check for surface radio buttons in multicolor mode
+        if (e.target.id.slice(0, 3) === "st_" && pu.mode[pu.mode.qa].edit_mode === "multicolor") {
+            let key = e.target.id.slice(10, -3);
+            pu.stylemode_check('st_surface' + key);
+            pu.key_number(key);
+            e.preventDefault();
+        } else if (e.target.id.slice(0, 3) === "st_") { // Style mode
+            pu.stylemode_check(e.target.id.slice(0, -3));
             e.preventDefault();
         }
         // Combination mode
@@ -1874,6 +1989,19 @@ onload = function() {
         }
         lines.push(currentLine);
         return lines;
+    }
+
+    // Double click to select all of a certain element
+    document.addEventListener("dblclick", window_dblclick, { passive: false });
+
+    function window_dblclick(e) {
+        if (e.target.id === "canvas") {
+            document.getElementById("inputtext").blur(); // Remove focus from text box
+            onDown(e);
+            if (checkms === 0) {
+                e.preventDefault();
+            }
+        }
     }
 
     //panel(drag_window)
@@ -1988,7 +2116,7 @@ onload = function() {
             }
         } else if (panel_pu.panelmode === "alphabet" || panel_pu.panelmode === "alphabet_s") {
             if (0 <= n && n <= 27) {
-                pu.key_number(panel_pu.cont[n].toString());
+                pu.key_number(panel_pu.cont[n].toString(), true);
             } else if (n === 28) {
                 pu.key_number(" ");
             } else if (n >= 29) {
@@ -2009,6 +2137,15 @@ onload = function() {
         }
     }
 
+    // Background image handling
+    document.getElementById("edit_bg_image").addEventListener('click', () => {
+        document.getElementById('modal-bg-image').style.display = 'block';
+    });
+
+    document.getElementById("bg_image_url").addEventListener('change', () => pu.update_bg_image_url());
+    for (let v of ['x', 'y', 'width', 'height', 'opacity', 'foreground', 'mask_white', 'threshold'])
+        document.getElementById("bg_image_" + v).addEventListener('change', () => pu.update_bg_image_attrs());
+
     PenpaUI.initPenpaLite();
 
     window.addEventListener('beforeunload', function(e) {
@@ -2028,6 +2165,11 @@ onload = function() {
     });
 
     function save_progress() {
+        // Auto-save tab state in browser history if requested
+        if (UserSettings.auto_save_history) {
+            duplicate(true);
+        }
+
         // Save puzzle progress
         if (localStorageAvailable &&
             pu.url.length !== 0 &&
@@ -2085,12 +2227,20 @@ onload = function() {
         UserSettings.sudoku_centre_size = this.value;
     }
 
+    document.getElementById("outline_text_opt").onchange = function() {
+        UserSettings.outline_text = this.value;
+    }
+
     document.getElementById("reload_button").onchange = function() {
         UserSettings.reload_button = parseInt(this.value, 10) === 1;
     }
 
     document.getElementById("allow_local_storage").onchange = function() {
         UserSettings.local_storage = (parseInt(this.value, 10) === 1);
+    }
+
+    document.getElementById("auto_save_history_opt").onchange = function() {
+        UserSettings.auto_save_history = this.value;
     }
 
     $(document).ready(function() {
@@ -2214,6 +2364,16 @@ onload = function() {
         UserSettings.conflict_detection = this.value;
     }
 
+    // Conflict check on pencil marks
+    document.getElementById("check_pencil_marks_opt").onchange = function() {
+        UserSettings.check_pencil_marks = this.value;
+    }
+
+    // Let other colors match "green" for line/edge solution check
+    document.getElementById("ignore_line_style_opt").onchange = function() {
+        UserSettings.ignore_line_style = this.value;
+    }
+
     // Enable or Disable Shortcuts
     document.getElementById("enable_shortcuts_opt").onchange = function() {
         UserSettings.shortcuts_enabled = String(this.value) === '1';
@@ -2245,6 +2405,25 @@ onload = function() {
         pu.hide_pause_layer();
         sw_timer.start({ precision: 'secondTenths' });
     }
+
+    // Pause/unpause when tab loses focus
+    let autopaused = false;
+    document.addEventListener("visibilitychange", () => {
+        // Only change pause state if we're not already paused
+        let pause_canvas = document.getElementById("pause_canvas");
+        if (pause_canvas.style.display !== "none")
+            return;
+
+        if (document.visibilityState === "visible") {
+            if (autopaused) {
+                sw_timer.start();
+                autopaused = false;
+            }
+        } else if (sw_timer.isRunning()) {
+            sw_timer.pause();
+            autopaused = true;
+        }
+    });
 };
 
 function clear_storage_one() {

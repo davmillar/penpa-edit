@@ -50,6 +50,7 @@ class Puzzle_square extends Puzzle {
         var ny = this.ny0;
         var adjacent, surround, type, use, neighbor, adjacent_dia;
         var point = [];
+        const index = (x, y) => [x, y, this.nx0 * y + x];
         //center
         type = 0;
         for (var j = 0; j < ny; j++) {
@@ -59,7 +60,7 @@ class Puzzle_square extends Puzzle {
                 adjacent_dia = [k - nx - 1, k - nx + 1, k + nx - 1, k + nx + 1];
                 surround = [k + nx * ny - nx - 1, k + nx * ny - nx, k + nx * ny, k + nx * ny - 1];
                 neighbor = [k + 2 * nx * ny - nx, k + 2 * nx * ny, k + 3 * nx * ny - 1, k + 3 * nx * ny];
-                point[k] = new Point((i + 0.5) * this.size, (j + 0.5) * this.size, type, adjacent, surround, use, neighbor, adjacent_dia);
+                point[k] = new Point((i + 0.5) * this.size, (j + 0.5) * this.size, type, adjacent, surround, use, neighbor, adjacent_dia, 0, index(i, j));
                 k++;
             }
         }
@@ -71,7 +72,7 @@ class Puzzle_square extends Puzzle {
                 adjacent = [k - nx, k - 1, k + 1, k + nx];
                 adjacent_dia = [k - nx - 1, k - nx + 1, k + nx - 1, k + nx + 1];
                 surround = [];
-                point[k] = new Point(point[i + j * nx].x + 0.5 * this.size, point[i + j * nx].y + 0.5 * this.size, type, adjacent, surround, use, [], adjacent_dia);
+                point[k] = new Point(point[i + j * nx].x + 0.5 * this.size, point[i + j * nx].y + 0.5 * this.size, type, adjacent, surround, use, [], adjacent_dia, 0, index(i, j));
                 k++;
             }
         }
@@ -85,7 +86,7 @@ class Puzzle_square extends Puzzle {
                 adjacent = [k + nx, k - nx];
                 surround = [];
                 neighbor = [k - 2 * nx * ny, k - 2 * nx * ny + nx];
-                point[k] = new Point(point[i + j * nx].x, point[i + j * nx].y + 0.5 * this.size, type, adjacent, surround, use, neighbor);
+                point[k] = new Point(point[i + j * nx].x, point[i + j * nx].y + 0.5 * this.size, type, adjacent, surround, use, neighbor, [], 0, index(i, j));
                 k++;
             }
         }
@@ -96,7 +97,7 @@ class Puzzle_square extends Puzzle {
                 adjacent = [k + 1, k - 1];
                 surround = [];
                 neighbor = [k - 3 * nx * ny, k - 3 * nx * ny + 1];
-                point[k] = new Point(point[i + j * nx].x + 0.5 * this.size, point[i + j * nx].y, type, adjacent, surround, use, neighbor);
+                point[k] = new Point(point[i + j * nx].x + 0.5 * this.size, point[i + j * nx].y, type, adjacent, surround, use, neighbor, [], 0, index(i, j));
                 k++;
             }
         }
@@ -109,16 +110,16 @@ class Puzzle_square extends Puzzle {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) { use = -1; } else { use = 1; }
                 surround = [];
                 adjacent = [k - 4 * nx + 2, k - 3, k + 1, k + 2];
-                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
                 adjacent = [k - 4 * nx + 2, k - 1, k + 3, k + 2];
-                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
                 adjacent = [k - 2, k - 3, k + 1, k + 4 * nx - 2];
-                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
                 adjacent = [k - 2, k - 1, k + 3, k + 4 * nx - 2];
-                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
             }
         }
@@ -131,13 +132,13 @@ class Puzzle_square extends Puzzle {
                 if (i === 0 || i === nx - 1 || j === 0 || j === ny - 1) { use = -1; } else { use = 1; }
                 adjacent = [];
                 surround = [];
-                point[k] = new Point(point[i + j * nx].x - 0 * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x - 0 * this.size, point[i + j * nx].y - r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
-                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y - 0 * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x + r * this.size, point[i + j * nx].y - 0 * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
-                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y + 0 * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x - r * this.size, point[i + j * nx].y + 0 * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
-                point[k] = new Point(point[i + j * nx].x + 0 * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use);
+                point[k] = new Point(point[i + j * nx].x + 0 * this.size, point[i + j * nx].y + r * this.size, type, adjacent, surround, use, [], [], 0, index(i, j));
                 k++;
             }
         }
@@ -180,8 +181,11 @@ class Puzzle_square extends Puzzle {
 
     type_set() {
         var type
-        switch (this.mode[this.mode.qa].edit_mode) {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        switch (edit_mode) {
             case "surface":
+            case "multicolor":
             case "board":
                 type = [0];
                 break;
@@ -194,11 +198,11 @@ class Puzzle_square extends Puzzle {
                 }
                 break;
             case "number":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                if (submode === "2") {
                     type = [0];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+                } else if (submode === "3") {
                     type = [4];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "9") {
+                } else if (submode === "9") {
                     type = [5];
                 } else {
                     if (!UserSettings.draw_edges) {
@@ -209,20 +213,20 @@ class Puzzle_square extends Puzzle {
                 }
                 break;
             case "line":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                } else if (submode === "2") {
                     type = [0, 1];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "5") {
+                } else if (submode === "5") {
                     type = [0, 2, 3];
                 } else {
                     type = [0];
                 }
                 break;
             case "lineE":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "4") {
+                if (submode === "4") {
                     type = [2, 3];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                } else if (submode === "2") {
                     type = [0, 1];
                 } else {
                     type = [1];
@@ -236,21 +240,21 @@ class Puzzle_square extends Puzzle {
                 }
                 break;
             case "cage":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "1") {
+                if (submode === "1") {
                     type = [0];
-                } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "2") {
+                } else if (submode === "2") {
                     type = [4];
                 }
                 break;
             case "special":
-                if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
+                if (submode === "polygon") {
                     type = [1];
                 } else {
                     type = [0, 1];
                 }
                 break;
             case "combi":
-                switch (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]) {
+                switch (submode) {
                     case "tents":
                     case "linex":
                     case "linedir":
@@ -347,11 +351,13 @@ class Puzzle_square extends Puzzle {
     }
 
     cursolcheck() {
-        if (this.mode[this.mode.qa].edit_mode === "number" && this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        if (edit_mode === "number" && submode === "3") {
             if (this.cursolS > 8 * (this.nx0) * (this.ny0)) {
                 this.cursolS -= 4 * (this.nx0) * (this.ny0);
             }
-        } else if (this.mode[this.mode.qa].edit_mode === "number" && this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "9") {
+        } else if (edit_mode === "number" && submode === "9") {
             if (this.cursolS < 8 * (this.nx0) * (this.ny0)) {
                 this.cursolS += 4 * (this.nx0) * (this.ny0);
             }
@@ -386,8 +392,10 @@ class Puzzle_square extends Puzzle {
                 c = b[3];
                 break;
         }
-        if (this.mode[this.mode.qa].edit_mode === "number" || this.mode[this.mode.qa].edit_mode === "symbol" || this.mode[this.mode.qa].edit_mode === "sudoku") {
-            if (this.mode[this.mode.qa].edit_mode === "number" && this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "3") {
+        let edit_mode = this.mode[this.mode.qa].edit_mode;
+        let submode = this.mode[this.mode.qa][edit_mode][0];
+        if (edit_mode === "number" || edit_mode === "symbol" || edit_mode === "sudoku" || edit_mode === "multicolor") {
+            if (edit_mode === "number" && submode === "3") {
                 switch (c) {
                     case 0:
                         a = this.cursolS % 2 === 0 ? this.cursolS - 3 : this.cursolS - 1;
@@ -412,7 +420,7 @@ class Puzzle_square extends Puzzle {
                 if (!this.selection.includes(this.cursol)) {
                     this.selection.push(this.cursol);
                 }
-            } else if (this.mode[this.mode.qa].edit_mode === "number" && this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "9") {
+            } else if (edit_mode === "number" && submode === "9") {
                 switch (c) {
                     case 0:
                         a = this.cursolS % 4 === 2 ? this.cursolS - 4 : this.cursolS - this.cursolS % 4 + 2;
@@ -437,7 +445,8 @@ class Puzzle_square extends Puzzle {
                 if (!this.selection.includes(this.cursol)) {
                     this.selection.push(this.cursol);
                 }
-            } else if (this.mode[this.mode.qa].edit_mode === "sudoku") {
+            } else if (edit_mode === "sudoku" || edit_mode === "multicolor" ||
+                  (edit_mode === "number" && this.number_multi_enabled())) {
                 if (this.selection.length >= 1) {
                     var current_cursor = this.cursol;
                     switch (c) {
@@ -1603,16 +1612,69 @@ class Puzzle_square extends Puzzle {
                     }
                     break;
                 case "5": //small
-                    set_font_style(this.ctx, 0.25 * this.size.toString(10), this[pu].number[i][1]);
-                    this.ctx.text(this[pu].number[i][0], p_x, p_y + 0.02 * factor * this.size, this.size * 0.9);
-                    break;
                 case "6": //medium
-                    set_font_style(this.ctx, 0.4 * this.size.toString(10), this[pu].number[i][1]);
-                    this.ctx.text(this[pu].number[i][0], p_x, p_y + 0.03 * factor * this.size, this.size * 0.9);
-                    break;
                 case "10": //big
-                    set_font_style(this.ctx, 0.6 * this.size.toString(10), this[pu].number[i][1]);
-                    this.ctx.text(this[pu].number[i][0], p_x, p_y + 0.03 * factor * this.size, this.size * 0.8);
+                    if (this[pu].number[i][0]) {
+                        // Calculate layout parameters based on size
+
+                        var fontSize = this.size;
+                        if (this[pu].number[i][2] == "5")
+                            fontSize *= 0.25;
+                        else if (this[pu].number[i][2] == "6")
+                            fontSize *= 0.4;
+                        else
+                            fontSize *= 0.6;
+
+                        var dy = 0.03;
+                        if (this[pu].number[i][2] == "5")
+                            dy = 0.02;
+
+                        var maxWidth = this.size;
+                        if (this[pu].number[i][2] == "10")
+                            maxWidth *= 0.8;
+                        else
+                            maxWidth *= 0.9;
+
+                        // Fast path, no conflict checking, just draw it all at once
+                        if (!UserSettings.check_pencil_marks) {
+                            set_font_style(this.ctx, fontSize, this[pu].number[i][1]);
+                            this.ctx.text(this[pu].number[i][0], p_x, p_y + dy * factor * this.size, maxWidth);
+                        }
+                        // Slow path: have to draw the digits one by one so we can change
+                        // colors on them individually
+                        else {
+                            // Calculate text width to see if the font needs to be shrunk
+                            set_font_style(this.ctx, fontSize, this[pu].number[i][1]);
+                            var width = this.ctx.measureText(this[pu].number[i][0]).width;
+                            if (width > maxWidth) {
+                                fontSize = maxWidth / width * fontSize;
+                                width = maxWidth;
+                                set_font_style(this.ctx, fontSize, this[pu].number[i][1]);
+                            }
+
+                            // Left align since we're drawing each digit separately
+                            var align = this.ctx.textAlign;
+                            this.ctx.textAlign = "left";
+
+                            var dx = -width / 2;
+                            // Draw each individual digit
+                            for (var j in this[pu].number[i][0]) {
+                                var text = this[pu].number[i][0].charAt(j);
+                                var n = parseInt(text);
+                                n = Number.isNaN(n) ? text : n;
+                                var style = this.ctx.fillStyle;
+                                if (this.conflict_cell_values[i] && this.conflict_cell_values[i].includes(n))
+                                    this.ctx.fillStyle = Color.RED;
+
+                                // Draw the digit and add its width to the horizontal offset
+                                this.ctx.text(text, p_x + dx, p_y + dy * factor * this.size, maxWidth);
+                                dx += this.ctx.measureText(text).width;
+
+                                this.ctx.fillStyle = style;
+                            }
+                            this.ctx.textAlign = align;
+                        }
+                    }
                     break;
                 case "7": //sudoku
                     var sum = 0,
@@ -1630,7 +1692,11 @@ class Puzzle_square extends Puzzle {
                         set_font_style(this.ctx, 0.3 * this.size.toString(10), this[pu].number[i][1]);
                         for (var j = 0; j < 9; j++) {
                             if (this[pu].number[i][0][j] === 1) {
+                                var style = this.ctx.fillStyle;
+                                if (this.conflict_cell_values[i] && this.conflict_cell_values[i].includes(j + 1))
+                                    this.ctx.fillStyle = Color.RED;
                                 this.ctx.text((j + 1).toString(), p_x + ((j % 3 - 1) * 0.28) * this.size, p_y + (((j / 3 | 0) - 1) * 0.28 + 0.02) * this.size);
+                                this.ctx.fillStyle = style;
                             }
                         }
                     }
@@ -1664,9 +1730,16 @@ class Puzzle_square extends Puzzle {
             }
             if (true) { //(this[pu].numberS[i][0].length <= 2 ){
                 if (this.point[i]) {
+                    var [_, _, j] = this.point[i].index;
                     set_font_style(this.ctx, 0.32 * this.size.toString(10), this[pu].numberS[i][1]);
+                    var n = parseInt(this[pu].numberS[i][0]);
+                    var style = this.ctx.fillStyle;
+                    if (UserSettings.check_pencil_marks && this.conflict_cell_values[j] &&
+                        this.conflict_cell_values[j].includes(n))
+                        this.ctx.fillStyle = Color.RED;
                     this.ctx.textAlign = "center";
                     this.ctx.text(this[pu].numberS[i][0], this.point[i].x, this.point[i].y + 0.03 * this.size, this.size * 0.48);
+                    this.ctx.fillStyle = style;
                 }
                 //}else{
                 //  set_font_style(this.ctx,0.28*this.size.toString(10),this[pu].numberS[i][1]);

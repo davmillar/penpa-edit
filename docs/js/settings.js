@@ -65,7 +65,17 @@ const UserSettings = {
         return this._timerbar_status;
     },
 
-    // Toggle timer bar visibility
+    _auto_save_history: false,
+    set auto_save_history(newValue) {
+        this._auto_save_history = newValue === "1" || newValue === "true" || newValue === true;
+        document.getElementById("auto_save_history_opt").value = this._auto_save_history ? "1" : "0";
+        this.attemptSave();
+    },
+    get auto_save_history() {
+        return this._auto_save_history;
+    },
+
+    // Toggle mouse middle button settings
     _mousemiddle_button: 1,
     set mousemiddle_button(newValue) {
         const valueInt = newValue ? parseInt(newValue, 10) : 1;
@@ -113,6 +123,19 @@ const UserSettings = {
     },
     get show_conflicts() {
         return this._conflict_detection > 1
+    },
+
+    // Check conflicts on pencil marks
+    _check_pencil_marks: false,
+    set check_pencil_marks(newValue) {
+        this._check_pencil_marks = newValue === "1" || newValue === "true" || newValue === true;
+        document.getElementById("check_pencil_marks_opt").value = this._check_pencil_marks ? "1" : "0";
+        if (window.pu)
+            pu.redraw();
+        this.attemptSave();
+    },
+    get check_pencil_marks() {
+        return this._check_pencil_marks;
     },
 
     // Star Battle Dot handling
@@ -169,6 +192,18 @@ const UserSettings = {
         return this._sudoku_centre_size;
     },
 
+    _outline_text: false,
+    set outline_text(newValue) {
+        this._outline_text = newValue === "1" || newValue === "true" || newValue === true;
+        document.getElementById("outline_text_opt").value = this._outline_text ? "1" : "0";
+        if (window.pu)
+            pu.redraw();
+        this.attemptSave();
+    },
+    get outline_text() {
+        return this._outline_text;
+    },
+
     _custom_colors_on: false,
     set custom_colors_on(newValue) {
         const stringValue = String(newValue);
@@ -190,6 +225,17 @@ const UserSettings = {
     },
     get custom_colors_on() {
         return this._custom_colors_on;
+    },
+
+    // Setting to ignore all
+    _ignore_line_style: false,
+    set ignore_line_style(newValue) {
+        this._ignore_line_style = newValue === "1" || newValue === "true" || newValue === true;
+        document.getElementById("ignore_line_style_opt").value = this._ignore_line_style ? "1" : "0";
+        this.attemptSave();
+    },
+    get ignore_line_style() {
+        return this._ignore_line_style;
     },
 
     // This setting is for whether the user wants local storage to be used at all, ever
@@ -275,6 +321,9 @@ const UserSettings = {
     },
     set color_theme(newValue) {
         const valueInt = newValue ? parseInt(newValue, 10) : THEME_LIGHT;
+        if (this._color_theme === valueInt)
+            return; // avoid loading the theme css repeatedly
+
         this._color_theme = valueInt;
 
         let themeStylesheet = this._theme_urls[valueInt];
@@ -355,6 +404,9 @@ const UserSettings = {
     _shorten_links: false,
     set shorten_links(newValue) {
         if (newValue === undefined) { newValue = false; }
+        // [ZW] Not sure how this is happening but a value of "false" can get stored in
+        // the settings which is interpreted as true
+        if (newValue === "false") { newValue = false; }
         this._shorten_links = newValue;
 
         document.getElementById("shorten_links_dropdown").value = newValue ? 1 : 0;
@@ -403,12 +455,16 @@ const UserSettings = {
     },
 
     can_save: [
+        'auto_save_history',
+        'check_pencil_marks',
         'app_language',
         'color_theme',
         'conflict_detection',
         'custom_colors_on',
+        'ignore_line_style',
         'local_storage',
         'mousemiddle_button',
+        'outline_text',
         'quick_panel_button',
         'reload_button',
         'responsive_mode',

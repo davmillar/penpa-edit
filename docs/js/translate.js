@@ -63,11 +63,12 @@ function trans() {
 
     var button_text = {
         "newboard": ["新規 / 更新", "New Grid / Update"],
-        "rotation": ["回転 / 移動", "Rotate / Move"],
-        "newsize": ["サイズ変更", "Sizechange"],
+        "rotation": ["変身", "Transform"],
+        "newsize": ["サイズ変更", "Resize"],
         "saveimage": ["画像保存", "Screenshot"],
         "savetext": ["出力", "Share"],
         "duplicate": ["複製", "Clone"],
+        "edit_bg_image": ["背景を編集", "Edit Background"],
         "input_sudoku": ["数独入出力", "I/O Sudoku"],
         "input_url": ["入力", "Load"],
         "tb_undo": ["戻", "Undo"],
@@ -112,6 +113,7 @@ function trans() {
         "visibility_button0": ["解答表示：", "Visibility:"],
         "mode_txt": ["モード：", "Mode:"],
         "mo_surface_lb": ["黒マス", "Surface"],
+        "mo_multicolor_lb": ["マルチカラー", "Multicolor"],
         "mo_line_lb": ["線", "Line"],
         "mo_lineE_lb": ["辺", "Edge"],
         "mo_wall_lb": ["壁", "Wall"],
@@ -148,13 +150,13 @@ function trans() {
         "sub_sudoku2_lb": ["角", "Corner"],
         "sub_sudoku3_lb": ["中央", "Centre"],
         "ms1": ["図形", "Shape"],
-        "ms1_circle": ["円", "Circle"],
-        "ms1_square": ["正方形", "Square"],
-        "ms1_triup": ["上三角", "UpTri."],
-        "ms1_tridown": ["下三角", "DownTri."],
-        "ms1_triright": ["右三角", "RightTri."],
-        "ms1_trileft": ["左三角", "LeftTri."],
-        "ms1_diamond": ["ダイヤ", "Diamond"],
+        // "ms1_circle": ["円", "&#x26AB; &#x26AA; &#x25CF; &#x25CB;"],
+        // "ms1_square": ["正方形", "&#x2B1B; &#x2B1C; &#x25FC; &#x25FB;"],
+        // "ms1_triup": ["上三角", "&#x25B2; &#x25B3; &#x25B4; &#x25B5;"],
+        // "ms1_tridown": ["下三角", "&#x25BC; &#x25BD; &#x25BE; &#x25BF;"],
+        // "ms1_triright": ["右三角", "&#9655; &#11208; &#9657; &#9656;"],
+        // "ms1_trileft": ["左三角", "&#9665; &#11207; &#9667; &#9666;"],
+        // "ms1_diamond": ["ダイヤ", "&#x2B25; &#x2B26; &#x25C6; &#x25C7;"],
         "ms1_hexpoint": ["六角１", "Hexagon point"],
         "ms1_hexflat": ["六角２", "Hexagon flat"],
         "ms_ox_B": ["黒", "Black"],
@@ -167,12 +169,12 @@ function trans() {
         "ms_bars_B": ["黒", "Black"],
         "ms_bars_G": ["灰", "Gray"],
         "ms_bars_W": ["白", "White"],
-        "ms_tri": ["直角三角形", "Corner triangle"],
+        // "ms_tri": ["直角三角形", "Corner triangle"],
         "ms2": ["数字", "Number"],
         "ms3_math": ["無限・計算", "Math"],
         "ms_math": ["黒", "Black"],
         "ms_math_G": ["緑", "Green"],
-        "ms_inequality": ["不等号", "Inequality"],
+        // "ms_inequality": ["不等号", "Inequality"],
         "ms_degital_B": ["黒", "Black"],
         "ms_degital_E": ["緑", "Green"],
         "ms_degital_G": ["灰", "Gray"],
@@ -229,19 +231,19 @@ function trans() {
         "sub_move3_lb": ["記号", "Shapes"],
         "subc1": ["塗り", "Paint"],
         "combisub_blpo": ["黒・点", "Black/Dot"],
-        "combisub_blwh": ["白丸黒丸", "Ying Yang"],
+        "combisub_blwh": ["白丸黒丸", "Ying-Yang"],
         "combisub_shaka": ["シャカシャカ", "Shakashaka"],
         "subc2": ["ループ", "Loop"],
-        "combisub_linex": ["線・×", "Line/×"],
-        "combisub_lineox": ["線・OX", "Line/OX"],
-        "combisub_edgexoi": ["辺・x・内外", "Edge/x/in out"],
+        "combisub_linex": ["線・×", "Line ×"],
+        "combisub_lineox": ["線・OX", "Line OX"],
+        "combisub_edgexoi": ["辺・x・内外", "Edge IO"],
         "combisub_yajilin": ["ヤジリン", "Yajilin"],
         "combisub_hashi": ["橋をかけろ", "Hashi"],
         "subc3": ["領域", "Area"],
-        "combisub_edgesub": ["辺・補助線", "Edge/AuxLine"],
+        "combisub_edgesub": ["辺・補助線", "Edge/Aux Line"],
         "subc4": ["物体", "Object"],
         "combisub_battleship": ["バトルシップ", "Battleship"],
-        "combisub_star": ["スターバトル", "Star battle"],
+        "combisub_star": ["スターバトル", "Star Battle"],
         "combisub_tents": ["テント", "Tents"],
         "combisub_magnets": ["マグネット", "Magnets"],
         "combisub_arrowS": ["矢印フリック", "Arrow flick"],
@@ -306,8 +308,8 @@ function trans() {
         "st_sudoku10_lb": ["赤", "R"],
         "st_symbol1_lb": ["線-奥", "Behind lines"],
         "st_symbol2_lb": ["線-前", "In front of lines"],
-        "panel_buttons0": ["選択中：", "Selecting:"],
-        "panel_buttonc0": ["選択中：", "Selecting:"],
+        "panel_buttons0": ["選択中：", "Selection:"],
+        "panel_buttonc0": ["選択中：", "Selection:"],
         "st_cage10_lb": ["点線", "Dot"],
         "st_cage7_lb": ["灰線", "Gray"],
         "st_cage15_lb": ["灰点", "GrayDot"],
@@ -335,9 +337,11 @@ function trans() {
         "nb_sudoku4_lb": ["対角線 &#x27CB;", "Diagonal &#x27CB;"],
         "nb_sudoku2_lb": ["外周ヒント", "Outside clues"],
         "nb_sudoku3_lb": ["外周ヒント(上左)", "Outside clues (top/left)"],
+        "nb_penrose1_lb": ["回転非対称性", "Rotational asymmetry"],
         "nb_sudoku8_lb": ["サイズ 4x4", "Size 4x4"],
         "nb_sudoku5_lb": ["サイズ 6x6", "Size 6x6"],
         "nb_sudoku6_lb": ["サイズ 8x8", "Size 8x8"],
+        "nb_penrose2_lb": ["タイリングシード", "Tiling Seed"],
         "name_space1": ["上：", "Over:"],
         "name_space2": ["下：", "Under:"],
         "name_space3": ["左：", "Left:"],
@@ -405,7 +409,16 @@ function trans() {
         "save5texttitle": ["ヘッダー", "header"],
         "custom_lb": ["カスタムメッセージ", "Custom Message"],
         "save6texttitle": ["URL入力", "Load URL"],
-        "quick_panel_toggle_label": ["パネル：", "Panel:"]
+        "quick_panel_toggle_label": ["パネル：", "Panel:"],
+        "bg_image_url_lb": ["画像URL：", "Image URL:"],
+        "bg_image_x_lb": ["X位置：", "X position:"],
+        "bg_image_y_lb": ["Y位置：", "Y position:"],
+        "bg_image_width_lb": ["幅：", "Width:"],
+        "bg_image_height_lb": ["高さ：", "Height:"],
+        "bg_image_opacity_lb": ["不透明度：", "Opacity:"],
+        "bg_image_foreground_lb": ["前景に描画：", "Draw in foreground:"],
+        "bg_image_mask_white_lb": ["画像から白をマスク：", "Mask out white from image:"],
+        "bg_image_threshold_lb": ["白マスクのしきい値：", "White mask threshold:"]
     }
 
     var placeholder = {
@@ -435,6 +448,7 @@ const PenpaText = {
         'nb_gridtype11_lb',
         'nb_gridtype12_lb',
         'nb_gridtype13_lb',
+        'nb_gridtype14_lb',
         'nb_rules_lb',
         'nb_title_lb',
         'settings_modal_header',
@@ -517,6 +531,7 @@ const PenpaText = {
         sides: { EN: "Sides:", JP: '横：' },
         over: { EN: "Over:", JP: '上：' },
         border: { EN: "Border:", JP: '境界：' },
+        order: { EN: "Order:" },
 
         nb_gridtype8_lb: { EN: 'Tetrakis square' },
         nb_gridtype9_lb: { EN: 'Truncated square' },
@@ -524,6 +539,7 @@ const PenpaText = {
         nb_gridtype11_lb: { EN: 'Cairo pentagonal' },
         nb_gridtype12_lb: { EN: 'Rhombitrihexagonal' },
         nb_gridtype13_lb: { EN: 'Deltoidal trihexagonal' },
+        nb_gridtype14_lb: { EN: 'Penrose P3' },
 
         // Generic Terms
         on: { EN: "ON" },
@@ -564,8 +580,8 @@ const PenpaText = {
         solve_path: { EN: 'Solve Path', JP: '想定解法(Solve Path)' },
 
         feedback_modal: {
-            EN: 'Any suggestions or improvements, send an email to <b> penpaplus@gmail.com </b> <br> or <br> Create an issue on github <a href="https://github.com/swaroopg92/penpa-edit/issues" target="_blank">here</a> <br> or <br> Join discussions in #penpa-plus channel in the Discord Server <a href="https://discord.gg/BbN89j5" target="_blank">here</a>.',
-            JP: '修正やご提案は以下からご連絡ください。 <b> penpaplus@gmail.com </b> <br> / <br> Create an issue on github <a href=https://github.com/swaroopg92/penpa-edit/issues" target="_blank">Github</a> <br> / <br> Join discussions in #penpa-plus channel in the Discord Server <a href="https://discord.gg/BbN89j5" target="_blank">Discord</a>."'
+            EN: 'Any suggestions or improvements, send an email to <b> penpaplus@gmail.com </b> <br> or <br> Create an issue on github <a href="https://github.com/swaroopg92/penpa-edit/issues" target="_blank">here</a> <br> or <br> Join discussions in #penpa-plus channel in the Discord Server <a href="https://discord.com/channels/709370620642852885/1253382126435569665" target="_blank">here</a>.',
+            JP: '修正やご提案は以下からご連絡ください。 <b> penpaplus@gmail.com </b> <br> / <br> Create an issue on github <a href=https://github.com/swaroopg92/penpa-edit/issues" target="_blank">Github</a> <br> / <br> Join discussions in #penpa-plus channel in the Discord Server <a href="https://discord.com/channels/709370620642852885/1253382126435569665" target="_blank">here</a>."'
         },
 
         contest_answer: {
@@ -638,7 +654,7 @@ const PenpaText = {
         lb_settings_conflict: { EN: 'Conflict Detection:', JP: '不一致の検出' },
         lb_settings_conflict_off_this: { EN: 'OFF (this puzzle)', JP: 'OFF（このパズル）' },
         lb_settings_conflict_off_all: { EN: 'OFF (all puzzles)', JP: 'OFF（全てのパズル）' },
-        lb_settings_sudoku_keys: { EN: 'Sudoku Z/Y & XCV Keys:', JP: '数独のショートカットキー（ZYXCV）' },
+        lb_settings_sudoku_keys: { EN: 'Sudoku Z/Y & XCV Keys:', JP: '数独のショートカットキ (Z/Y & XCV)' },
         lb_settings_storage: { EN: 'Saving/Storage', JP: '保存' },
         lb_settings_saved_settings: { EN: 'Saved Settings:', JP: '保存した設定' },
         clear_settings: { EN: 'Clear cookies', JP: 'クッキーをクリアする' },
@@ -828,6 +844,14 @@ const PenpaText = {
             EN: 'Side Size must be in the range <h2 class="warn">1-$v</h2>',
             JP: '一辺の大きさは以下の範囲です <h2 class="warn">1-$v</h2>'
         },
+        order_warning_generic: {
+            EN: 'Order must be in the range <h2 class="warn">3-$v</h2>',
+            JP: '注文は範囲内でなければなりません <h2 class="warn">3-$v</h2>'
+        },
+        rotational_asymmetry_warning_generic: {
+            EN: 'Rotational asymmetry must be in the range <h2 class="warn">0-$v</h2> for this order',
+            JP: '回転非対称性は範囲内でなければならない <h2 class="warn">0-$v</h2> この注文について'
+        },
 
         alpha_warning: {
             EN: "**Alpha Version - It's under development and currently has limited functionality",
@@ -843,9 +867,12 @@ const PenpaText = {
             JP: "URLが長すぎるエラーの時はここに入力。puzz.linkの一部のリンクにも対応。"
         },
 
+        "answer_check_shading exact color": { EN: "Match exact shading colors", JP: 'シェーディングカラーを正確に一致させる' },
         "answer_check_shading": { EN: "Shade cells in Dark Grey (DG) or Grey (GR) or Light Grey (LG) or Black (BL)", JP: '黒マスは濃灰（DG）、灰（GR）、薄灰（LG）、黒（BL）' },
         "answer_check_number": { EN: "Numbers must be in Green, Blue or Red color", JP: '数字は緑か青か赤' },
+        "answer_check_cell loop exact": { EN: "Line must be in Green Color", JP: '色とスタイルが一致する線' },
         "answer_check_cell loop": { EN: "Line must be in Green Color", JP: '線は緑' },
+        "answer_check_edge loop exact": { EN: "Edges in matching color/style", JP: '色とスタイルがマッチしたエッジ' },
         "answer_check_edge loop": { EN: "Edge must be in Green Color", JP: '辺は緑' },
         "answer_check_wall": { EN: "Walls must be in Green Color", JP: '壁は緑' },
         "answer_check_square": { EN: "Black Squares", JP: '黒正方形' },
@@ -883,7 +910,7 @@ const PenpaText = {
     },
 
     modes: {
-        EN: ["Surface",
+        EN: ["Surface", "Multicolor",
             "Line Normal", "Line Diagonal", "Line Free", "Line Middle", "Line Helper",
             "Edge Normal", "Edge Diagonal", "Edge Free", "Edge Helper", "Edge Erase",
             "Wall",
@@ -894,7 +921,7 @@ const PenpaText = {
             "Special", "Thermo", "Sudoku Arrow",
             "Composite"
         ],
-        JP: ["黒マス",
+        JP: ["黒マス", "多色",
             "線 通常", "線 対角線", "線 自由線", "線 中線", "線 補助x",
             "辺 通常", "辺 対角線", "辺 自由線", "辺 補助x", "辺 枠消",
             "壁",
@@ -905,7 +932,7 @@ const PenpaText = {
             "特殊", "サーモ", "数独 アロー",
             "複合"
         ],
-        mapping: ["surface",
+        mapping: ["surface", "multicolor",
             "sub_line1", "sub_line2", "sub_line3", "sub_line5", "sub_line4",
             "sub_lineE1", "sub_lineE2", "sub_lineE3", "sub_lineE4", "sub_lineE5",
             "wall",

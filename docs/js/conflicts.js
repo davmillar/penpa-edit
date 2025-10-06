@@ -16,6 +16,7 @@ class Conflicts {
     reset() {
         this.data_cache = [];
         this.pu.conflict_cells = [];
+        this.pu.conflict_cell_values = [];
     }
 
     get_data(item) {
@@ -33,72 +34,84 @@ class Conflicts {
     //========================================================================
 
     // For an NxN grid, mark any duplicates between 1 and N as conflicts.
-    check_latin_square() {
+    check_latin_square(alphabet = false) {
         const data = this.get_data('number_grid');
-        const n = data.length;
-        if (!n || data[0].length !== n) {
-            // Empty or not square
+        const r = data.length
+        if (!r)
             return;
-        }
-        const row = new Array(n);
-        const col = new Array(n);
-        for (let i = 0; i < n; i++) {
-            row.fill(0);
-            col.fill(0);
-            let row_conflict = false;
-            let col_conflict = false;
-            for (let j = 0; j < n; j++) {
-                // Subtract one to get 0-based index.
-                const row_el = data[i][j] - 1;
-                const col_el = data[j][i] - 1;
-                if (row_el >= 0 && row_el < n) {
-                    if (row[row_el]++) {
-                        row_conflict = true;
+        const c = data[0].length;
+        const n = Math.max(r, c);
+        for (let i = 0; i < r; i++) {
+            for (let j = 0; j < c; j++) {
+                const value = data[i][j];
+                if (value !== undefined) {
+                    // Check row conflicts
+                    for (let k = 0; k < c; k++) {
+                        if (k === j)
+                            continue;
+                        this.add_conflict_value(k, i, value);
+
+                        const el2 = data[i][k];
+                        if (el2 == undefined) continue;
+                        let match;
+                        if (alphabet) {
+                            match = value.toLowerCase() === el2.toLowerCase();
+                        } else {
+                            match = value === el2;
+                        }
+
+                        if (k > j && match) {
+                            this.add_conflict(j, i);
+                            this.add_conflict(k, i);
+                        }
                     }
-                }
-                if (col_el >= 0 && col_el < n) {
-                    if (col[col_el]++) {
-                        col_conflict = true;
+
+                    // Check column conflicts
+                    for (let k = 0; k < r; k++) {
+                        if (k === i)
+                            continue;
+                        this.add_conflict_value(j, k, value);
+
+                        const el2 = data[k][j];
+                        if (el2 == undefined) continue;
+                        let match;
+                        if (alphabet) {
+                            match = value.toLowerCase() === el2.toLowerCase();
+                        } else {
+                            match = value === el2;
+                        }
+
+                        if (k > i && match) {
+                            this.add_conflict(j, i);
+                            this.add_conflict(j, k);
+                        }
                     }
-                }
-            }
-            // Mark whole row as in conflict.
-            // We could also consider just marking the affected cells?
-            if (row_conflict) {
-                for (let j = 0; j < n; j++) {
-                    this.add_conflict(j, i);
-                }
-            }
-            // Mark whole column as in conflict.
-            if (col_conflict) {
-                for (let j = 0; j < n; j++) {
-                    this.add_conflict(i, j);
                 }
             }
         }
     }
 
     // Check for duplicate numbers on any of the 3 axes.
-    check_latin_square_hex(){
-        let hex_seen_cells = this.stable_lookup("hex_seen_cells","");
+    check_latin_square_hex() {
+        let hex_seen_cells = this.stable_lookup("hex_seen_cells", "");
         // Calculate all pairs of cells which see each other along any of the 
         // three axes on a hex grid, and store pairs of cells as 
         // Map of [Smaller index number] = [List of larger index numbers]
-        if (!hex_seen_cells){
+        if (!hex_seen_cells) {
             hex_seen_cells = new Map();
             //for each cell in centerlist
-            for (let sourceIdx of this.pu.centerlist){
+            for (let sourceIdx of this.pu.centerlist) {
                 //for each of the six directions:
-                for (let dir = 0; dir < 6; dir++){
+                for (let dir = 0; dir < 6; dir++) {
                     let targetIdx = this.pu.point[sourceIdx].adjacent[dir];
                     //until we find no more adjacencies:
-                    while (this.pu.centerlist.indexOf(targetIdx) > -1){
+                    while (this.pu.centerlist.indexOf(targetIdx) > -1) {
                         //if this pair is not yet recorded, record it.
                         let lowIdx = Math.min(sourceIdx, targetIdx);
                         let highIdx = Math.max(sourceIdx, targetIdx);
-                        if (!hex_seen_cells.has(lowIdx)){
-                            hex_seen_cells.set(lowIdx,[highIdx]);
-                        }else if (hex_seen_cells.get(lowIdx).indexOf(highIdx) == -1){
+                        if (!hex_seen_cells.has(lowIdx)) {
+                            hex_seen_cells.set(lowIdx, [highIdx]);
+                        } else if (hex_seen_cells.get(lowIdx).indexOf(highIdx) == -1) {
                             hex_seen_cells.get(lowIdx).push(highIdx);
                         }
                         targetIdx = this.pu.point[targetIdx].adjacent[dir];
@@ -109,10 +122,10 @@ class Conflicts {
         }
 
         //do comparison between cells that see each other
-        for (let cellIdx_list of hex_seen_cells){
+        for (let cellIdx_list of hex_seen_cells) {
             let sourceNum = this.read_number_cell(cellIdx_list[0]);
-            for (let seen_cell of cellIdx_list[1]){
-                if (sourceNum !== undefined && sourceNum === this.read_number_cell(seen_cell)){
+            for (let seen_cell of cellIdx_list[1]) {
+                if (sourceNum !== undefined && sourceNum === this.read_number_cell(seen_cell)) {
                     //record conflict
                     this.add_conflict_cell(cellIdx_list[0]);
                     this.add_conflict_cell(seen_cell);
@@ -122,41 +135,97 @@ class Conflicts {
     }
 
     // Check a classic sudoku puzzle.
-    check_sudoku() {
+    check_sudoku(alphabet = false) {
         const data = this.get_data('number_grid');
         const n = data.length;
         if (n !== 9 || data[0].length !== 9) {
             // Not a 9x9 grid
             return;
         }
-        this.check_latin_square();
-        // Stop early if there are already conflicts.
-        if (this.has_conflicts()) return;
+        this.check_latin_square(alphabet);
         // Check 3x3 cells
-        const cell = new Array(9);
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 3; j++) {
-                cell.fill(0);
-                let cell_conflict = false;
-                // Iterate over cell starting at (3i, 3j)
+        for (let i = 0; i < 9; i++) {
+            for (let j = 0; j < 9; j++) {
+                const el = data[i][j];
+                if (alphabet) {
+                    if (el == undefined) continue;
+                } else {
+                    if (!(el >= 1 && el <= n)) continue;
+                }
+
+                // Get coordinates of this box's top-left corner
+                let bi = 3 * ((i / 3) | 0);
+                let bj = 3 * ((j / 3) | 0);
+
                 for (let k = 0; k < 3; k++) {
                     for (let l = 0; l < 3; l++) {
-                        // Convert to 0-based index
-                        const el = data[3 * i + k][3 * j + l] - 1;
-                        if (!(el >= 0 && el < n)) continue;
-                        if (cell[el]++) {
-                            cell_conflict = true;
-                            break;
+                        let kk = bi + k;
+                        let ll = bj + l;
+                        if (kk === i && ll === j)
+                            continue;
+
+                        this.add_conflict_value(ll, kk, el);
+
+                        const el2 = data[kk][ll];
+                        if (el2 == undefined) continue;
+
+                        if (alphabet) {
+                            if (el2.toLowerCase() === el.toLowerCase())
+                                this.add_conflict(ll, kk);
+                        } else {
+                            if (el2 === el)
+                                this.add_conflict(ll, kk);
                         }
                     }
                 }
-                if (!cell_conflict) continue;
-                // Mark whole cell as in conflict.
-                // We could also consider just marking the affected cells?
-                for (let k = 0; k < 3; k++) {
-                    for (let l = 0; l < 3; l++) {
-                        this.add_conflict(3 * j + l, 3 * i + k);
-                    }
+            }
+        }
+    }
+
+    // Check an irregular sudoku puzzle.
+    check_irregular() {
+        const data = this.get_data('number_grid');
+        const r = data.length
+        if (!r)
+            return;
+        const c = data[0].length;
+        const n = Math.max(r, c);
+
+        this.check_latin_square();
+
+        // Determine regions from edges. We use "full" mode that takes edges from problem or solution
+        // mode and accepts all normal edge styles
+        let regions_matrix = this.pu.getregiondata(r, c, "full");
+        // Make a list of cells in each region
+        let regions = {};
+        for (let i = 0; i < r; i++) {
+            for (let j = 0; j < c; j++) {
+                let region = regions_matrix[i][j];
+                if (!regions[region])
+                    regions[region] = []
+                regions[region].push([i, j]);
+            }
+        }
+
+        // Check each region
+        for (let region in regions) {
+            // Skip regions with more cells than there are rows or columns (in something like a
+            // chaos construction this could indicate the large area of as-yet-undetermined regions)
+            if (regions[region].length > n)
+                continue;
+            for (let [i, j] of regions[region]) {
+                const el = data[i][j];
+                if (el === undefined)
+                    continue;
+                for (let [k, l] of regions[region]) {
+                    if (k === i && l === j)
+                        continue;
+                    const el2 = data[k][l];
+
+                    this.add_conflict_value(l, k, el);
+
+                    if (el2 === el)
+                        this.add_conflict(l, k);
                 }
             }
         }
@@ -587,24 +656,27 @@ class Conflicts {
     }
     read_number_cell(index) {
         // For the question entry we check that it is black and large
+        if (!this.pu.centerlist.includes(index))
+            return undefined;
+
         let entry = this.pu.pu_q.number[index];
         if (Array.isArray(entry) && entry.length === 3 &&
             entry[2] === "1" // Large
             &&
-            entry[1] === 1 // black
-            &&
-            Number.isFinite(parseInt(entry[0]))) {
-            return parseInt(entry[0]);
+            entry[1] === 1) { // black
+            if (Number.isFinite(parseInt(entry[0])))
+                return parseInt(entry[0]);
+            return entry[0];
         }
         // For the answer entry we allow more colors/sizes
         entry = this.pu.pu_a.number[index];
         if (Array.isArray(entry) && entry.length === 3 &&
             this.permit_number_size.has(entry[2]) // Large
             &&
-            this.permit_number_colors.has(entry[1]) // black
-            &&
-            Number.isFinite(parseInt(entry[0]))) {
-            return parseInt(entry[0]);
+            this.permit_number_colors.has(entry[1])) { // black
+            if (Number.isFinite(parseInt(entry[0])))
+                return parseInt(entry[0]);
+            return entry[0];
         }
         return undefined;
     }
@@ -619,6 +691,15 @@ class Conflicts {
     add_conflict_cell(index) {
         if (this.pu.conflict_cells.includes(index)) return;
         this.pu.conflict_cells.push(index);
+    }
+
+    add_conflict_value(x, y, v) {
+        var i = this.xy_to_index(x, y);
+        if (this.pu.conflict_cell_values[i] === undefined)
+            this.pu.conflict_cell_values[i] = [];
+        if (this.pu.conflict_cell_values[i].includes(v))
+            return;
+        this.pu.conflict_cell_values[i].push(v);
     }
 
     // Add conflicts for a region using the region grid and index.

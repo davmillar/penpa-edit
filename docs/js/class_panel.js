@@ -18,7 +18,7 @@ class Panel {
         this.edit_num = 0;
     }
 
-    mode_set(mode) {
+    mode_set(mode, skipredraw = false) {
         if (pu.mode[pu.mode.qa].edit_mode === "sudoku" && !["number", "alphabet", "alphabet_s"].includes(mode)) {
             // Don't change the mode as Sudoku mode does not support other submodes in the Panel
         } else {
@@ -352,8 +352,8 @@ class Panel {
                     this.fkb.style.paddingTop = "0px";
                     this.fkb.style.display = "block";
                     this.fkm.style.display = "flex";
-                    this.cont = ["a", "b", "", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
-                        "p", "q", "r", "s", "t", "u", "", "w", "", "y", "", "", "", "\u{2423}", "\u{2421}"
+                    this.cont = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o",
+                        "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "", "", "\u{2423}", "\u{2421}"
                     ];
                     this.draw_number();
                     break;

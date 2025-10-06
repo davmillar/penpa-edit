@@ -29,6 +29,7 @@ const Color = {
     RED: "#ff0000",
     RED_LIGHT: "#ffa3a3",
     RED_TRANSPARENT: "rgba(255, 0, 0, 0.7)",
+    BLUE_TRANSPARENT: "rgba(40, 90, 255, 0.7)",
     TRANSPARENTBLACK: "rgba(0, 0, 0, 0)",
     TRANSPARENTWHITE: "rgba(255, 255, 255, 0)",
     WHITE: "#ffffff",
@@ -350,6 +351,9 @@ function set_font_style(ctx, size, type, ccolor = "none") {
             ctx.strokeStyle = Color.TRANSPARENTWHITE;
             break;
     }
+
+    if (UserSettings.outline_text)
+        ctx.strokeStyle = Color.WHITE;
 }
 
 function set_circle_style(ctx, num, ccolor = "none") {
