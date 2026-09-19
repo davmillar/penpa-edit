@@ -1,7 +1,7 @@
 const MAX_EXPORT_LENGTH = 7360;
 
 class Point {
-    constructor(x, y, type, adjacent, surround, use, neighbor = [], adjacent_dia = [], type2 = 0, index = null) {
+    constructor(x, y, type, adjacent, surround, use, neighbor = [], adjacent_dia = [], type2 = 0, index = null, edge_to_vertex = []) {
         this.x = x;
         this.y = y;
         this.type = type;
@@ -10,6 +10,7 @@ class Point {
         this.adjacent_dia = adjacent_dia;
         this.surround = surround;
         this.neighbor = neighbor;
+        this.edge_to_vertex = edge_to_vertex;
         this.use = use;
         this.index = index;
     }
@@ -31,15 +32,18 @@ class Stack {
         // }
         this.__a.push(o);
     }
+
     pop() {
         if (this.__a.length > 0) {
             return this.__a.pop();
         }
         return null;
     }
+
     size() {
         return this.__a.length;
     }
+
     toString() {
         return '[' + this.__a.join(',') + ']';
     }
@@ -137,6 +141,8 @@ class Puzzle {
         this.select_remove = false;
         this.surface_remove = false;
         this.panelflag = false;
+        this.corner_table = []; // Table for quick lookup for cage drawing. First coordinate is cell, second is vertex
+        this.types = [[0], [1], [2, 3, 4], [6], [5]]; // In order: cells, vertices, edges, corners, compass
         this.custom_colors = {};
         // Drawing mode
         this.mmode = ""; // Problem mode
@@ -199,7 +205,7 @@ class Puzzle {
             'deltoidal': 20,
             'penrose': 20
         }; // also defined in general.js
-        this.version = [3, 2, 1]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
+        this.version = [3, 2, 4]; // Also defined in HTML Script Loading in header tag to avoid Browser Cache Problems
         this.undoredo_disable = false;
         this.comp = false;
         this.multisolution = false;
@@ -235,8 +241,6 @@ class Puzzle {
         this[p].number = {};
         this[p].numberS = {};
         this[p].symbol = {};
-        this[p].freeline = {};
-        this[p].freelineE = {};
         this[p].thermo = [];
         this[p].arrows = [];
         this[p].direction = [];
@@ -278,9 +282,7 @@ class Puzzle {
             case "line":
                 if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "4") {
                     this[this.mode.qa].line = {};
-                    this[this.mode.qa].freeline = {};
                     this[this.mode.qa + "_col"].line = {};
-                    this[this.mode.qa + "_col"].freeline = {};
                 } else {
                     for (var i in this[this.mode.qa].line) {
                         if (this[this.mode.qa].line[i] === 98) {
@@ -311,9 +313,7 @@ class Puzzle {
                     this[this.mode.qa + "_col"].deletelineE = {};
                 } else {
                     this[this.mode.qa].lineE = {};
-                    this[this.mode.qa].freelineE = {};
                     this[this.mode.qa + "_col"].lineE = {};
-                    this[this.mode.qa + "_col"].freelineE = {};
                 }
                 break;
             case "wall":
@@ -368,6 +368,39 @@ class Puzzle {
             if (this.mode[mode].multicolor === undefined)
                 this.mode[mode].multicolor = ["", 1];
         }
+
+        for (let mode of ['pu_q', 'pu_q_col', 'pu_a', 'pu_a_col']) {
+            // Put freeline with the regular array since they are now using the same one
+            if (this[mode].freeline !== undefined) {
+                if (this[mode].freeline.constructor.length !== 0) {
+                    for (var line in this[mode].freeline) {
+                        let split = this.split_line("line", line);
+                        for (var subline of split) {
+                            if (this[mode]["line"][subline] === undefined) {
+                                this[mode]["line"][subline] = this[mode].freeline[line];
+                            }
+                        }
+                    }
+                    this[mode].freeline = {};
+                }
+            }
+
+            if (this[mode].freelineE !== undefined) {
+                if (this[mode].freelineE.constructor.length !== 0) {
+                    for (var line in this[mode].freelineE) {
+                        let split = this.split_line("lineE", line);
+                        for (var subline of split) {
+                            if (this[mode]["lineE"][subline] === undefined) {
+                                this[mode]["lineE"][subline] = this[mode].freelineE[line];
+                            }
+                        }
+                    }
+                    this[mode].freelineE = {};
+                }
+            }
+        }
+
+        this.redraw(); // We updated the line and lineE arrays, so we need to display them again. Otherwise it starts blank
     }
 
     reset_pause_layer() {
@@ -395,7 +428,7 @@ class Puzzle {
         let font_size = 0.09 * pause_canvas.height; // 9 % of display size/ height of canvas
         pause_ctx.font = font_size + 'px sans-serif';
         let lineheight = 1.2 * font_size;
-        let textstring = "Paused\nClick on \"Start\"\nor \"F4\"";
+        let textstring = PenpaText.get('pause_message') || "Paused\nClick on \"Start\"\nor \"F4\"";
         let lines = textstring.split('\n');
         let textwidth;
 
@@ -491,6 +524,227 @@ class Puzzle {
         }))]
     }
 
+    // Fill the neighbor array for edges and vertices
+
+    fill_neighbors(point) {
+        for (var i in point) {
+            if (this.types[0].indexOf(point[i].type) !== -1) {
+                for (let j = 0; j < point[i].neighbor.length; j++) {
+                    point[point[i].neighbor[j]].neighbor.push(parseInt(i));
+                }
+                for (let j = 0; j < point[i].surround.length; j++) {
+                    point[point[i].surround[j]].neighbor.push(parseInt(i));
+                }
+            }
+        }
+        for (var i in point) {
+            if (this.types[1].indexOf(point[i].type) !== -1 || this.types[2].indexOf(point[i].type) !== -1) {
+                point[i].neighbor = [...new Set(point[i].neighbor)];
+            }
+        }
+        return point;
+    }
+
+    // For this function to work correctly, cells need to have their surrond to be exact and their neighbor to contain all correct edges (there may be more edges than the correct ones)
+    // This function fills in the rest of the fields, and modify incorrect fields if needed
+
+    fix_points(point) {
+        // First pass - reset fields
+        for (var i in point) {
+            if (this.types[0].indexOf(point[i].type) !== -1) {
+                point[i].adjacent = [];
+            }
+            if (this.types[1].indexOf(point[i].type) !== -1) {
+                point[i].adjacent = [];
+                point[i].neighbor = [];
+                point[i].edge_to_vertex = [];
+            }
+            if (this.types[2].indexOf(point[i].type) !== -1) {
+                point[i].adjacent = [];
+                point[i].neighbor = [];
+                point[i].edge_to_vertex = [];
+            }
+        }
+
+        // Second pass - correctly link edges with their incident vertices, and vice versa
+        for (var i in point) {
+            // For all cells
+            if (this.types[0].indexOf(point[i].type) !== -1 && point[i].use !== -1) {
+                let deltas = [];
+                let vertices = point[i].surround;
+                let edge_bank = point[i].neighbor;
+                vertices = [...new Set(vertices)]
+                edge_bank = [...new Set(edge_bank)];
+                // Find all possible pairs of vertices
+                for (let j = 0; j < vertices.length; j++) {
+                    point[vertices[j]].neighbor.push(parseInt(i));
+                    for (let k = j + 1; k < vertices.length; k++) {
+                        let not_connected = false;
+                        let vertex1 = point[vertices[j]];
+                        let vertex2 = point[vertices[k]];
+                        for (let l = 0; l < vertices.length; l++) {
+                            if (l !== j && l !== k) {
+                                if ((this.distance_to_line(vertex1, vertex2, point[vertices[l]]) < 0.001) && this.between_points(vertex1, vertex2, point[vertices[l]])) {
+                                    not_connected = true;
+                                }
+                            }
+                        }
+                        if (!not_connected) {
+                            for (let l = 0; l < edge_bank.length; l++) {
+                                let delta = this.distance_to_line(vertex1, vertex2, point[edge_bank[l]]);
+                                if (this.between_points(vertex1, vertex2, point[edge_bank[l]])) {
+                                    deltas.push({
+                                        diff: delta,
+                                        v1: Math.min(vertices[j], vertices[k]),
+                                        v2: Math.max(vertices[j], vertices[k]),
+                                        edge: edge_bank[l]
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                // Sort the distance, and find the best matches
+                deltas.sort((a, b) => a.diff - b.diff);
+                let edges = [];
+                for (let j = 0; j < vertices.length; j++) {
+                    // Fill in the edge_to_vertex data, and add the cell to the edge's neighbour
+                    point[deltas[j].edge].edge_to_vertex = [deltas[j].v1, deltas[j].v2];
+                    point[deltas[j].edge].neighbor.push(parseInt(i));
+                    edges.push(deltas[j].edge);
+                }
+                point[i].neighbor = edges;
+            }
+        }
+        // Third pass - fix cells and vertices' adjacent fields
+        for (var i in point) {
+            // For all edges, which now have correct edge_to_vertex and neighbor data
+            if (this.types[2].indexOf(point[i].type) !== -1) {
+                let edge = point[i];
+                for (let j = 0; j < 2; j++) {
+                    // Fix vertices adjacent
+                    if (!!edge.edge_to_vertex) {
+                        if (edge.edge_to_vertex.length == 2) {
+                            point[edge.edge_to_vertex[j]].adjacent.push(parseInt(edge.edge_to_vertex[(j + 1) % 2]));
+                        }
+                    }
+                    // Fix cells adjacent
+                    if (edge.neighbor.length == 2) {
+                        point[edge.neighbor[j]].adjacent.push(parseInt(edge.neighbor[(j + 1) % 2]));
+                    }
+                }
+                // Fix vertices' edge_to_vertex
+                if (!!edge.edge_to_vertex) {
+                    for (let j = 0; j < edge.edge_to_vertex.length; j++)
+                        point[edge.edge_to_vertex[j]].edge_to_vertex.push(parseInt(i));
+                }
+            }
+        }
+        return point;
+    }
+
+    // Create connections for all corners
+    point_connect_corners(point) {
+        for (var i in point) {
+            if (this.types[2].indexOf(point[i].type) !== -1) {
+                let edge = point[i];
+                let cells = edge.neighbor;
+                let vertices = edge.edge_to_vertex;
+                if (vertices.length == 2) {
+                    for (let j = 0; j < cells.length; j++) {
+                        if (!!point[this.corner_table[cells[j]][vertices[0]]] && !!point[this.corner_table[cells[j]][vertices[1]]]) {
+                            point[this.corner_table[cells[j]][vertices[0]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[1]]));
+                            point[this.corner_table[cells[j]][vertices[1]]].adjacent.push(parseInt(this.corner_table[cells[j]][vertices[0]]));
+                        }
+                    }
+                }
+                if (cells.length == 2) {
+                    for (let j = 0; j < 2; j++) {
+                        if (!!point[this.corner_table[cells[0]][vertices[j]]] && !!point[this.corner_table[cells[1]][vertices[j]]]) {
+                            point[this.corner_table[cells[1]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[0]][vertices[j]]));
+                            point[this.corner_table[cells[0]][vertices[j]]].adjacent.push(parseInt(this.corner_table[cells[1]][vertices[j]]));
+                        }
+                    }
+                }
+            }
+        }
+        return point;
+    }
+
+    // Add neighbor and surround to each of the corners
+    point_fillin_corners(point) {
+        let cells = [];
+        let corners = [];
+        for (var i in point) {
+            if (this.types[0].indexOf(point[i].type) !== -1) {
+                cells.push(parseInt(i));
+            }
+            if (this.types[3].indexOf(point[i].type) !== -1 && point[i].use === 1) {
+                corners.push(parseInt(i));
+                point[i].adjacent = [];
+                point[i].neighbor = [];
+                point[i].surround = [];
+            }
+        }
+        for (let i = 0; i < cells.length; i++) {
+            this.corner_table[cells[i]] = [];
+            let cell = point[cells[i]];
+            for (let j = 0; j < cell.surround.length; j++) {
+                let vertex = point[cell.surround[j]];
+                let min = 1;
+                let corner = 0;
+                for (let k = 0; k < corners.length; k++) {
+                    let corner_point = point[corners[k]];
+                    let diff = this.distance_to_line(cell, vertex, corner_point);
+                    if ((min > diff) && (Math.min(vertex.use, cell.use) !== -1) && this.between_points(vertex, cell, corner_point)) {
+                        min = diff;
+                        corner = corners[k];
+                    }
+                }
+                if (corner !== 0) {
+                    point[corner].surround.push(parseInt(cell.surround[j]));
+                    point[corner].neighbor.push(parseInt(cells[i]));
+                    this.corner_table[cells[i]][cell.surround[j]] = corner;
+                }
+            }
+        }
+        return point;
+    }
+
+    // Helper functions
+    distance_to_line(line1, line2, point) {
+        if (!line1 || !line2 || !point) {
+            return Number.MAX_VALUE;
+        }
+        return Math.abs((line1.y - line2.y) * point.x - (line1.x - line2.x) * point.y + (line1.x * line2.y) - (line1.y * line2.x)) /
+            Math.sqrt((line1.y - line2.y) ** 2 + (line1.x - line2.x) ** 2);
+    }
+
+    between_points(p1, p2, test) {
+        if (!p1 || !p2 || !test) {
+            return false;
+        }
+        return (Math.min(p1.x, p2.x) <= (test.x + 0.00001)) && ((test.x - 0.00001) <= Math.max(p1.x, p2.x)) &&
+            (Math.min(p1.y, p2.y) <= (test.y + 0.00001)) && ((test.y - 0.00001) <= Math.max(p1.y, p2.y));
+    }
+
+
+    // Create corners to be used by the puzzle
+    create_corners(point, radius, k) {
+        for (var i in point) {
+            if (this.types[0].indexOf(point[i].type) !== -1 && point[i].use !== -1) {
+                this.corner_table[i] = [];
+                let cell = point[i];
+                for (let j = 0; j < cell.surround.length; j++) {
+                    point[k] = new Point(cell.x * radius + point[cell.surround[j]].x * (1 - radius), cell.y * radius + point[cell.surround[j]].y * (1 - radius), 6, [], [parseInt(cell.surround[j])], 1, [parseInt(i)]);
+                    this.corner_table[i][cell.surround[j]] = parseInt(k);
+                    k = k + 1;
+                }
+            }
+        }
+        return [point, k];
+    }
+
     point_move(x, y, theta) {
         var x0 = this.canvasx * 0.5 + 0.5; // Rotate the canvas center +0.5, enter x,y +0.5 when moving in parallel
         var y0 = this.canvasy * 0.5 + 0.5;
@@ -513,10 +767,18 @@ class Puzzle {
         var ymax = 0,
             ymin = 1e5;
         for (var i of this.centerlist) {
-            if (this.point[i].x > xmax) { xmax = this.point[i].x; }
-            if (this.point[i].x < xmin) { xmin = this.point[i].x; }
-            if (this.point[i].y > ymax) { ymax = this.point[i].y; }
-            if (this.point[i].y < ymin) { ymin = this.point[i].y; }
+            if (this.point[i].x > xmax) {
+                xmax = this.point[i].x;
+            }
+            if (this.point[i].x < xmin) {
+                xmin = this.point[i].x;
+            }
+            if (this.point[i].y > ymax) {
+                ymax = this.point[i].y;
+            }
+            if (this.point[i].y < ymin) {
+                ymin = this.point[i].y;
+            }
         }
         var x = (xmax + xmin) / 2;
         var y = (ymax + ymin) / 2;
@@ -614,6 +876,28 @@ class Puzzle {
             i++;
         }
 
+    }
+
+    rotate_grid(th, canvasupdate = true) {
+        this.theta = (this.theta + th * this.reflect[0] * this.reflect[1] + 360) % 360;
+        if (canvasupdate) {
+            this.canvasxy_update();
+            this.canvas_size_setting();
+        }
+        this.point_move(0, 0, th);
+        this.redraw();
+    }
+
+    rotate_theta(th, sign = 1) {
+        th = (th + (sign * this.theta));
+        if (this.reflect[0] === -1) {
+            th = (180 - th + 360) % 360;
+        }
+        if (this.reflect[1] === -1) {
+            th = (360 - th + 360) % 360;
+        }
+        th = th / 180 * Math.PI;
+        return th;
     }
 
     resize_top(sign, celltype = 'black') {
@@ -744,7 +1028,7 @@ class Puzzle {
             } else {
                 if (this.space[spaceSide] > 0) {
                     this.space[spaceSide] = this.space[spaceSide] - 1;
-                } else if (pu.mode.qa === 'pu_a') {
+                } else {
                     return; // Protect board content
                 }
             }
@@ -782,7 +1066,7 @@ class Puzzle {
             }
         }
 
-        // Find the missing boxes
+        // Find the missing and added boxes
         let old_centerlist = this.centerlist;
         let old_idealcenterlist = []; // If no box was missing
         for (let j = 2 + originalspace[0]; j < originalny0 - 2 - originalspace[1]; j++) {
@@ -791,6 +1075,7 @@ class Puzzle {
             }
         }
         let boxremove = old_idealcenterlist.filter(x => old_centerlist.indexOf(x) === -1);
+        let boxadd = old_centerlist.filter(x => old_idealcenterlist.indexOf(x) === -1);
 
         this.create_point();
         this.centerlist = [];
@@ -823,6 +1108,7 @@ class Puzzle {
                 this.centerlist.push(i + j * (this.nx0));
             }
         }
+
         // Remove Box elements
         for (let n = 0; n < boxremove.length; n++) {
             let num = boxremove[n];
@@ -832,6 +1118,17 @@ class Puzzle {
                 this.centerlist.splice(index, 1);
             }
         }
+
+        // Add Box elements
+        for (let n = 0; n < boxadd.length; n++) {
+            let num = boxadd[n];
+            let m = translate_fn(num);
+            let index = this.centerlist.indexOf(m);
+            if (index === -1) {
+                this.centerlist.push(m);
+            }
+        }
+
         this.make_frameline();
         this.translate_puzzle_elements(translate_fn);
     }
@@ -892,7 +1189,7 @@ class Puzzle {
             }
 
             // Translate point-pair features
-            for (let feature of ['line', 'lineE', 'deletelineE', 'freeline', 'freelineE', 'wall', 'cage']) {
+            for (let feature of ['line', 'lineE', 'deletelineE', 'wall', 'cage']) {
                 if (this[i][feature]) {
                     let temp = this[i][feature];
                     this[i][feature] = {};
@@ -1145,7 +1442,7 @@ class Puzzle {
 
             var old_canvas = this.ctx;
             this.ctx = svg_canvas;
-            this.redraw(true); // Reflects SVG elements
+            this.redraw(true, false); // Reflects SVG elements
             this.ctx = old_canvas;
 
             this.mode[this.mode.qa].edit_mode = mode; // retain original mode
@@ -1244,22 +1541,26 @@ class Puzzle {
         var textHeight = 0;
         var currentRow = -1
 
+        let iswhite = function(r, g, b) {
+            return (r > 250) && (g > 250) && (b > 250);
+        }
         for (var i = 0, len = data.length; i < len; i += 4) {
             var r = data[i],
                 g = data[i + 1],
                 b = data[i + 2],
                 alpha = data[i + 3];
-            if (r != 255 || g != 255 || b != 255) {
+            if (!iswhite(r, g, b)) {
                 var yu = (Math.floor((i / 4) / this.canvas.width)) / this.resol;
                 break;
             }
-        };
+        }
+        ;
         for (var i = data.length - 4; i > 0; i -= 4) {
             var r = data[i],
                 g = data[i + 1],
                 b = data[i + 2],
                 alpha = data[i + 3];
-            if (r != 255 || g != 255 || b != 255) {
+            if (!iswhite(r, g, b)) {
                 var yd = (Math.floor((i / 4) / this.canvas.width) + 1) / this.resol;
                 break;
             }
@@ -1270,18 +1571,19 @@ class Puzzle {
                 g = data[j + 1],
                 b = data[j + 2],
                 alpha = data[j + 3];
-            if (r != 255 || g != 255 || b != 255) {
+            if (!iswhite(r, g, b)) {
                 var xl = (((j / 4) % this.canvas.width)) / this.resol;
                 break;
             }
-        };
+        }
+        ;
         for (var i = data.length - 4; i > 0; i -= 4) {
             var j = ((i / 4) % this.canvas.height) * this.canvas.width * 4 + Math.floor((i / 4) / this.canvas.height) * 4;
             var r = data[j],
                 g = data[j + 1],
                 b = data[j + 2],
                 alpha = data[j + 3];
-            if (r != 255 || g != 255 || b != 255) {
+            if (!iswhite(r, g, b)) {
                 var xr = (((j / 4) % this.canvas.width) + 1) / this.resol;
                 break;
             }
@@ -1330,6 +1632,9 @@ class Puzzle {
             this.subsymbolmode(submode, skipredraw);
         } else if (mode === "combi") {
             this.subcombimode(submode, skipredraw);
+        } else if (mode === "number") {
+            const dir = this.mode[this.mode.qa][mode][2] || 'R';
+            this.set_orientation(dir);
         }
         if (UserSettings.custom_colors_on && penpa_modes[this.gridtype].customcolor.includes(mode)) {
             let cc = this.mode[this.mode.qa][mode][2];
@@ -1350,6 +1655,7 @@ class Puzzle {
             let isNumberS = ["3", "9", "11"].includes(pu.mode[pu.mode.qa][pu.mode[pu.mode.qa].edit_mode][0])
             let enableLoadButton = (!isNumberS && pu[pu.mode.qa].number[pu.cursol]) || (isNumberS && pu[pu.mode.qa].numberS[pu.cursolS]);
             document.getElementById("closeBtn_input3").disabled = !enableLoadButton;
+            document.getElementById('orientation_button').style.display = 'block';
         }
 
         if (!skipredraw)
@@ -1404,6 +1710,14 @@ class Puzzle {
             panel_pu.draw_panel(); // Panel update
         }
         this.set_custom_color(name);
+    }
+
+    set_orientation(direction) {
+        let input_name = "rot_" + direction;
+        if (document.getElementById(input_name)) {
+            document.getElementById(input_name).checked = true;
+            this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][2] = direction;
+        }
     }
 
     subsymbolmode(mode, skipredraw = false) {
@@ -1494,6 +1808,8 @@ class Puzzle {
         document.getElementById('style_cage').style.display = 'none';
         document.getElementById('style_combi').style.display = 'none';
         document.getElementById('style_sudoku').style.display = 'none';
+
+        document.getElementById('orientation_button').style.display = 'none';
     }
 
     reset_selectedmode() {
@@ -1514,10 +1830,6 @@ class Puzzle {
                                 delete this[this.mode.qa + "_col"].line[i];
                             }
                         }
-                    }
-                    this[this.mode.qa].freeline = {};
-                    if (UserSettings.custom_colors_on) {
-                        this[this.mode.qa + "_col"].freeline = {};
                     }
                 } else {
                     for (var i in this[this.mode.qa].line) {
@@ -1553,10 +1865,6 @@ class Puzzle {
                                 delete this[this.mode.qa + "_col"].lineE[i];
                             }
                         }
-                    }
-                    this[this.mode.qa].freelineE = {};
-                    if (UserSettings.custom_colors_on) {
-                        this[this.mode.qa + "_col"].freelineE = {};
                     }
                 }
                 break;
@@ -2161,11 +2469,12 @@ class Puzzle {
                 return;
             }
 
-            // Ignore "given" line segments (which means ignoring a few specific styles
-            // of line and has nothing to do with given or not). [ZW] I don't understand the
-            // logic of this but it should probably stay for backwards compatibility.
-            if (line_ignore && l && this.ignored_line_types[l])
+            // Ignore "given" line segments (those which were present in the
+            // original puzzle in any of a few specific styles)
+            let lq = this.pu_q[type][i];
+            if (line_ignore && lq && this.ignored_line_types[lq]) {
                 return;
+            }
 
             // Look for green or double lines, or if the user has ignored styles,
             // double or anything-but-double (making sure that this is an actual
@@ -2189,9 +2498,6 @@ class Puzzle {
             }
             check_line(i, 'line');
         }
-
-        for (var i in pu.freeline)
-            check_line(i, 'freeline');
 
         return solution;
     }
@@ -2228,9 +2534,6 @@ class Puzzle {
 
         for (var i in pu.lineE)
             check_edge(i, 'lineE');
-
-        for (var i in pu.freelineE)
-            check_edge(i, 'freelineE');
 
         let found = $('#genre_tags_opt').select2("val").some(r => this.surface_2_edge_types.includes(r));
         if (found && this.gridtype === 'square') {
@@ -6232,7 +6535,7 @@ class Puzzle {
                             } else if (this.pu_q.symbol[i + j * (this.nx0)] && this.pu_q.symbol[i + j * (this.nx0)][0] === 2) {
                                 text += '.';
                             } else if (this.pu_a.number[i + j * (this.nx0)] && this.pu_a.number[i + j * (this.nx0)][2] !== "7" && (this.pu_q.surface[i + j * (this.nx0)] === 1 ||
-                                    this.pu_q.surface[i + j * (this.nx0)] === 8 || this.pu_q.surface[i + j * (this.nx0)] === 3)) { //Dark Grey, Grey and Light grey
+                                this.pu_q.surface[i + j * (this.nx0)] === 8 || this.pu_q.surface[i + j * (this.nx0)] === 3)) { //Dark Grey, Grey and Light grey
                                 switch (parseInt(this.pu_a.number[i + j * (this.nx0)][0])) {
                                     case 1:
                                         text += 'a';
@@ -6471,11 +6774,11 @@ class Puzzle {
                 }
                 if (a) {
                     if ((a[0] === "thermo" ||
-                            a[0] === "nobulbthermo" ||
-                            a[0] === "arrows" ||
-                            a[0] === "direction" ||
-                            a[0] === "squareframe" ||
-                            a[0] === "polygon") && a[1] === -1) {
+                        a[0] === "nobulbthermo" ||
+                        a[0] === "arrows" ||
+                        a[0] === "direction" ||
+                        a[0] === "squareframe" ||
+                        a[0] === "polygon") && a[1] === -1) {
                         if (this[pu_mode][a[0]].length > 0) {
                             this.pu_q.command_redo.push([a[0], a[1], this[pu_mode][a[0]].pop(), pu_mode]);
                             if (a_col) {
@@ -6591,12 +6894,12 @@ class Puzzle {
                         a_4 = [a[4]];
                     }
                     if ((a[0] === "thermo" ||
-                            a[0] === "nobulbthermo" ||
-                            a[0] === "arrows" ||
-                            a[0] === "direction" ||
-                            a[0] === "squareframe" ||
-                            a[0] === "polygon" ||
-                            a[0] === "killercages") && a[1] === -1) {
+                        a[0] === "nobulbthermo" ||
+                        a[0] === "arrows" ||
+                        a[0] === "direction" ||
+                        a[0] === "squareframe" ||
+                        a[0] === "polygon" ||
+                        a[0] === "killercages") && a[1] === -1) {
                         if (this[pu_mode][a[0]].length > 0) {
                             this.pu_a.command_redo.push([a[0], a[1], this[pu_mode][a[0]].pop(), pu_mode].concat(a_45));
                             if (a_col) {
@@ -6706,11 +7009,11 @@ class Puzzle {
                 }
                 if (a) {
                     if ((a[0] === "thermo" ||
-                            a[0] === "nobulbthermo" ||
-                            a[0] === "arrows" ||
-                            a[0] === "direction" ||
-                            a[0] === "squareframe" ||
-                            a[0] === "polygon") && a[1] === -1) {
+                        a[0] === "nobulbthermo" ||
+                        a[0] === "arrows" ||
+                        a[0] === "direction" ||
+                        a[0] === "squareframe" ||
+                        a[0] === "polygon") && a[1] === -1) {
                         this.pu_q.command_undo.push([a[0], a[1], null, pu_mode]);
                         this[pu_mode][a[0]].push(a[2]);
                         if (a_col) {
@@ -6818,12 +7121,12 @@ class Puzzle {
                         a_4 = [a[4]];
                     }
                     if ((a[0] === "thermo" ||
-                            a[0] === "nobulbthermo" ||
-                            a[0] === "arrows" ||
-                            a[0] === "direction" ||
-                            a[0] === "squareframe" ||
-                            a[0] === "polygon" ||
-                            a[0] === "killercages") && a[1] === -1) {
+                        a[0] === "nobulbthermo" ||
+                        a[0] === "arrows" ||
+                        a[0] === "direction" ||
+                        a[0] === "squareframe" ||
+                        a[0] === "polygon" ||
+                        a[0] === "killercages") && a[1] === -1) {
                         this.pu_a.command_undo.push([a[0], a[1], null, pu_mode].concat(a_45));
                         this[pu_mode][a[0]].push(a[2]);
                         if (a_col) {
@@ -7091,7 +7394,7 @@ class Puzzle {
                 // Compensate for every other row being offset, also store if this triangle
                 // is pointing up or down
                 let offset = (y - base_y) & y & 1;
-                return { x: x - base_x + offset, y: y - base_y, t: t };
+                return {x: x - base_x + offset, y: y - base_y, t: t};
             }
         }
         // Hexagonal grid
@@ -7104,7 +7407,7 @@ class Puzzle {
                 let [x, y] = this.point[p].index;
                 // Compensate for every other row being offset
                 let offset = (y - base_y) & y & 1;
-                return { x: x - base_x + offset, y: y - base_y };
+                return {x: x - base_x + offset, y: y - base_y};
             }
         }
         // Square grid
@@ -7115,7 +7418,7 @@ class Puzzle {
 
             rel_coords = (p) => {
                 let [x, y] = this.point[p].index;
-                return { x: x - base_x, y: y - base_y };
+                return {x: x - base_x, y: y - base_y};
             }
         }
         // Unsupported grid type
@@ -7140,7 +7443,7 @@ class Puzzle {
                 plain_clipboard += n_a[0];
             else if (n_q && n_q[0] !== "")
                 plain_clipboard += n_q[0];
-            // Put an "S" in the clipboard for shaded cells without numbers (commonly
+                // Put an "S" in the clipboard for shaded cells without numbers (commonly
             // used in LMD solution codes)
             else if ([1, 8, 3, 4].includes(puzzle['surface'][k]))
                 plain_clipboard += 'S';
@@ -7312,7 +7615,7 @@ class Puzzle {
 
         // Insert all data items into the grid relative to the base cell
         for (var data of clipboard_data.items) {
-            let { x, y } = data;
+            let {x, y} = data;
 
             x += base_x;
             y += base_y;
@@ -7348,8 +7651,8 @@ class Puzzle {
                     }
                 } else if (prop === "lineE") {
                     for (var [
-                            [i, j], edge_data, color
-                        ] of data[prop]) {
+                        [i, j], edge_data, color
+                    ] of data[prop]) {
                         let c1 = this.point[k].surround[i];
                         let c2 = this.point[k].surround[j];
                         let key = this.line_key(c1, c2);
@@ -7390,6 +7693,7 @@ class Puzzle {
         var str_num = "1234567890";
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         let submode = this.mode[this.mode.qa][edit_mode];
+        let orientation = submode[2] && submode[2] !== 'R' ? [submode[2]] : [];
 
         // If ZXCV is disabled
         if (!UserSettings.shortcuts_enabled || force_no_shortcut) {
@@ -7452,7 +7756,7 @@ class Puzzle {
                             number = key;
                         }
 
-                        this.set_value("number", k, [number, submode[1], submode[0]]);
+                        this.set_value("number", k, [number, submode[1], submode[0], ...orientation]);
                         break;
                     case "2": // Arrow
                         if (this[this.mode.qa].number[k] && this[this.mode.qa].number[k][2] != "7") {
@@ -7476,7 +7780,7 @@ class Puzzle {
                         } else {
                             number = key;
                         }
-                        this.set_value("number", k, [number + arrow, submode[1], submode[0]]);
+                        this.set_value("number", k, [number + arrow, submode[1], submode[0], ...orientation]);
                         break;
                     case "3": // 1/4, corner
                     case "9": // Sides
@@ -7486,10 +7790,12 @@ class Puzzle {
                             con = "";
                         }
                         number = con + key;
-                        this.set_value("numberS", k, [number, submode[1]]);
+                        this.set_value("numberS", k, [number, submode[1], ...orientation]);
                         break;
                     case "4": //tapa
-                        if (key === ".") { key = " "; }
+                        if (key === ".") {
+                            key = " ";
+                        }
                         if (this[this.mode.qa].number[k]) {
                             con = this[this.mode.qa].number[k][0];
                             mode = this[this.mode.qa].number[k][2];
@@ -7507,7 +7813,7 @@ class Puzzle {
                         } else { // Overwrite if arrow
                             number = key;
                         }
-                        this.set_value("number", k, [number, submode[1], submode[0]]);
+                        this.set_value("number", k, [number, submode[1], submode[0], ...orientation]);
                         break;
                     case "5": // Small
                     case "6": // Medium
@@ -7518,11 +7824,11 @@ class Puzzle {
                         } else {
                             con = "";
                         }
-                        // Length limit of 10 except for Long submode which has 50
-                        const limit = (submode[0] === "8") ? 50 : 10;
+                        // Length limit of 10 except for Long submode which has 1000
+                        const limit = (submode[0] === "8") ? 1000 : 10;
                         if (con.length < limit) {
                             number = con + key;
-                            this.set_value("number", k, [number, submode[1], submode[0]]);
+                            this.set_value("number", k, [number, submode[1], submode[0], ...orientation]);
                         }
                         break;
                     case "7": // Candidates
@@ -7537,7 +7843,7 @@ class Puzzle {
                                 con = "";
                             }
                             number = this.onofftext(9, key, con);
-                            let value = [number, submode[1], submode[0]];
+                            let value = [number, submode[1], submode[0], ...orientation];
                             this[this.mode.qa][prop][k] = value;
                             this.record_replay(prop, k, this.undoredo_counter);
                         }
@@ -7550,7 +7856,7 @@ class Puzzle {
                             con = "";
                         }
                         number = con + key;
-                        this.set_value("numberS", corner_cursor, [number, submode[1]]);
+                        this.set_value("numberS", corner_cursor, [number, submode[1], ...orientation]);
                         break;
                 }
             }
@@ -7601,9 +7907,9 @@ class Puzzle {
                         }
                         for (var k of this.selection) {
                             if (((this.mode.qa === "pu_a") &&
-                                    this["pu_q"].number[k] &&
-                                    this["pu_q"].number[k][2] === "1" &&
-                                    pu.only_alphanumeric(parseInt(this["pu_q"].number[k][0])))) { // if single digit is present, dont modify that cell
+                                this["pu_q"].number[k] &&
+                                this["pu_q"].number[k][2] === "1" &&
+                                pu.only_alphanumeric(parseInt(this["pu_q"].number[k][0])))) { // if single digit is present, dont modify that cell
                                 var single_digit = true;
                             } else if ((this.mode.qa === "pu_a") && this["pu_q"].number[k] && this["pu_q"].number[k][2] === "7") {
                                 // This is for single digit obtained from candidate submode
@@ -7945,7 +8251,7 @@ class Puzzle {
 
             // Add or remove, and write the new value to either surface or multicolor
             for (var k of this.selection) {
-                if (ccs[k] === undefined)
+                if (!ccs[k])
                     ccs[k] = [];
                 // Transform list of surface numbers/custom colors into lists of [number, color]
                 // pairs for easier handling
@@ -8687,13 +8993,31 @@ class Puzzle {
         return (Math.min(a, b)).toString() + "," + (Math.max(a, b)).toString();
     }
 
+    // For freelines, split into smaller pieces. Intended to be overriden by the specific class
+    split_line(array, num) {
+        var ret = [num];
+        return ret;
+    }
+
+    // For freelines, check how many sublines will need updated so that lines are completed instead of being inverted
+    line_change(array, lines, line_style) {
+        var ret = [];
+        for (let i = 0; i < lines.length; i++) {
+            if (this[this.mode.qa][array][lines[i]] === line_style) {
+                continue;
+            }
+            ret.push(lines[i])
+        }
+        return ret;
+    }
+
     mouse_line(x, y, num) {
         if (this.mouse_mode === "down_left") {
             this.drawing = true;
             this.drawing_mode = 100;
             this.last = num;
         } else if (this.mouse_mode === "move") {
-            if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "2" || this.point[num].type === 0) { // Not diagonal or diagonally inside
+            if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "2" || this.types[0].indexOf(this.point[num].type) !== -1) { // Not diagonal or diagonally inside
                 this.re_linemove(num);
                 this.last = num;
             }
@@ -8743,7 +9067,11 @@ class Puzzle {
                         delete this[this.mode.qa + "_col"][array][num];
                     }
                 }
-                this.record_replay(array, num);
+                if (group_counter > 0) {
+                    this.record_replay(array, num, group_counter);
+                } else {
+                    this.record_replay(array, num);
+                }
             }
         } else {
             if (this.drawing_mode === 100) { // single line, edge
@@ -8774,7 +9102,11 @@ class Puzzle {
                     this.drawing_mode = line_style;
                 }
             } else if (this.drawing_mode === line_style) { // to draw in a stretch
-                this.record(array, num);
+                if (group_counter > 0) {
+                    this.record(array, num, group_counter);
+                } else {
+                    this.record(array, num);
+                }
                 if (array === "deletelineE") {
                     this["pu_q"][array][num] = line_style;
                 } else {
@@ -8788,7 +9120,11 @@ class Puzzle {
                         }
                     }
                 }
-                this.record_replay(array, num);
+                if (group_counter > 0) {
+                    this.record_replay(array, num, group_counter);
+                } else {
+                    this.record_replay(array, num);
+                }
             }
         }
     }
@@ -8851,25 +9187,24 @@ class Puzzle {
     re_lineup_free(num) {
         if (num != this.last && this.last != -1) {
             var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
-            this.record("freeline", key);
-            if (this[this.mode.qa].freeline[key]) {
-                delete this[this.mode.qa].freeline[key];
-                if (UserSettings.custom_colors_on) {
-                    delete this[this.mode.qa + "_col"].freeline[key];
-                }
-            } else {
-                this[this.mode.qa].freeline[key] = this.drawing_mode;
-                if (UserSettings.custom_colors_on) {
-                    let cc = this.get_customcolor();
-                    if (!cc || tinycolor.equals(cc, CustomColor.default_line_style_color(this.drawing_mode))) {
-                        delete this[this.mode.qa + "_col"].freeline[key];
-                    } else {
-                        this[this.mode.qa + "_col"].freeline[key] = cc;
-                    }
-                }
+            var lines = this.split_line("line", key);
+            var update = this.line_change("line", lines, this.drawing_mode);
+            var style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
+
+            if (!((update.length === 0 && lines.length === 1) || update.length === 1)) {
+                this.undoredo_counter = this.undoredo_counter + 1;
             }
-            this.record_replay("freeline", key);
+
+            if (update.length === 0) {
+                this.drawing_mode = 0;
+                update = lines;
+            }
+
+            for (let i = 0; i < update.length; i++) {
+                this.re_line("line", update[i], style, this.undoredo_counter);
+            }
         }
+
     }
 
     mouse_lineX(x, y, num) {
@@ -8912,7 +9247,7 @@ class Puzzle {
             this.drawing_mode = 100;
             this.last = num;
         } else if (this.mouse_mode === "move") {
-            if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "2" || this.point[num].type === 1) { //対角線でないor対角線で内側
+            if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "2" || this.types[1].indexOf(this.point[num].type) !== -1) { //対角線でないor対角線で内側
                 this.re_linemoveE(num);
                 this.last = num;
             }
@@ -8948,6 +9283,12 @@ class Puzzle {
                     array = "deletelineE";
                     var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
                     this.re_line(array, key, 1);
+                }
+            } else if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "6") { // half edge
+                if (this.point[num].edge_to_vertex.indexOf(parseInt(this.last)) != -1) {
+                    array = "lineE";
+                    var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
+                    this.re_line(array, key, line_style);
                 }
             }
             this.redraw();
@@ -8985,25 +9326,20 @@ class Puzzle {
     re_lineEup_free(num) {
         if (num != this.last && this.last != -1) {
             var key = (Math.min(num, this.last)).toString() + "," + (Math.max(num, this.last)).toString();
-            this.record("freelineE", key);
-            if (this[this.mode.qa].freelineE[key]) {
-                delete this[this.mode.qa].freelineE[key];
-                if (UserSettings.custom_colors_on) {
-                    delete this[this.mode.qa + "_col"].freelineE[key];
-                }
-            } else {
-                this[this.mode.qa].freelineE[key] = this.drawing_mode;
-                if (UserSettings.custom_colors_on) {
-                    let cc = this.get_customcolor();
-                    if (!cc || tinycolor.equals(cc, CustomColor.default_line_style_color(this.drawing_mode))) {
-                        delete this[this.mode.qa + "_col"].freelineE[key];
-                    } else {
-                        this[this.mode.qa + "_col"].freelineE[key] = cc;
-                    }
-
-                }
+            var lines = this.split_line("lineE", key);
+            var update = this.line_change("lineE", lines, this.drawing_mode);
+            var style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
+            if (!((update.length === 0 && lines.length === 1) || update.length === 1)) {
+                this.undoredo_counter = this.undoredo_counter + 1;
             }
-            this.record_replay("freelineE", key);
+
+            if (update.length === 0) {
+                this.drawing_mode = 0;
+                update = lines;
+            }
+            for (let i = 0; i < update.length; i++) {
+                this.re_line("lineE", update[i], style, this.undoredo_counter);
+            }
         }
     }
 
@@ -9175,7 +9511,7 @@ class Puzzle {
                     this.selection.splice(i, 1);
             } else if (!this.selection.includes(num) && this.drawing) {
                 // Add to selection only if the num is type 0
-                if (this.point[num].type === 0)
+                if (this.types[0].indexOf(this.point[num].type) !== -1)
                     this.selection.push(num);
             }
             this.redraw();
@@ -9213,7 +9549,11 @@ class Puzzle {
                 } else {
                     number = con + "_" + arrowdirection;
                 }
-                this[this.mode.qa].number[this.cursol] = [number, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1], "2"];
+
+                let edit_mode = this.mode[this.mode.qa].edit_mode;
+                let submode = this.mode[this.mode.qa][edit_mode];
+                let orientation = submode[2] && submode[2] !== 'R' ? [submode[2]] : [];
+                this[this.mode.qa].number[this.cursol] = [number, submode[1], "2", ...orientation];
                 this.record_replay("number", this.cursol);
                 this.drawing = false;
                 this.last = -1;
@@ -9222,8 +9562,10 @@ class Puzzle {
         }
     }
 
-    direction_arrow8(x, y) {} //override
-    direction_arrow4(x, y) {} //override
+    direction_arrow8(x, y) {
+    } //override
+    direction_arrow4(x, y) {
+    } //override
 
     //////////////////////////
     // symbol
@@ -9253,7 +9595,7 @@ class Puzzle {
     //////////////////////////
 
     mouse_cage(x, y, num) {
-        if (document.getElementById('sub_cage1').checked) {
+        if (document.getElementById('sub_cage1').checked) /* Killer */{
             if (this.mouse_mode === "down_left") {
                 this.drawing = true;
                 // find if num already exist
@@ -9278,435 +9620,141 @@ class Puzzle {
                 } else {
                     this.cageselection = [];
                 }
-            } else if (this.mouse_mode === "up") {
+            } else if (this.mouse_mode === "up") /* Releasing the mouse with a cage selection */ {
                 this.drawing = false;
                 let cageexist_status = false;
                 let skip_cages = false;
                 let array = "cage";
-                let arraykill = "killercages";
-                let grid_matrix = [];
-                let cageexist_loc;
                 let key;
 
-                // Grid Size
-                let row_size = parseInt(this.ny0 - 4);
-                let col_size = parseInt(this.nx0 - 4);
-
-                // sort cage
-                let sortedcages = this.cageselection.sort((a, b) => a - b);
 
                 let line_style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
-
-                // Find if any cell of the new cage already has a cage
-                for (let j = 0; j < this[this.mode.qa][arraykill].length; j++) {
-                    let killercages_cells = [].concat.apply([], this[this.mode.qa][arraykill][j]);
-                    for (let i = 0; i < sortedcages.length; i++) {
-                        if (killercages_cells.includes(sortedcages[i])) {
-                            cageexist_status = true;
-                            cageexist_loc = j;
-                            break;
-                        }
-                    }
-                    if (cageexist_status) { // to exit from outermost for loop
-                        break;
-                    }
-                }
-
                 // Find if any cell of the new cage has outside half grid cells then skip
-                for (let i = 0; i < sortedcages.length; i++) {
-                    let col_num = (sortedcages[i] % (this.nx0)) - 2;
-                    let row_num = parseInt(sortedcages[i] / this.nx0) - 2;
-
-                    // If cage selection has outisde half grid cells then skip
-                    if ((row_num < 0) || (row_num >= row_size) || (col_num < 0) || (col_num >= col_size)) {
+                for (let i = 0; i < this.cageselection.length; i++) {
+                    if (this.cell_outside(this.cageselection[i])) {
                         cageexist_status = true;
                         skip_cages = true;
                         break;
                     }
                 }
 
-                if (!cageexist_status) {
 
-                    // undo redo group counter
+                if (this.cageselection.length > 1) {
+                    for (let i = 0; i < this.cageselection.length; i++) {
+                        let context = this.get_cage_context(this.cageselection[i], array);
+                        if (!this.flood_cage(this.cageselection[i], context[1], context[0], array)[0]) {
+                            cageexist_status = true;
+                        }
+                    }
+
+                    if (!cageexist_status) {
+                        // undo redo group counter
+                        this.undoredo_counter = this.undoredo_counter + 1;
+                        // remember drawing_mode
+                        let draw_mode = this.drawing_mode;
+                        this.drawing_mode = 100;
+                        let segments = this.cage_for_selection(this.cageselection);
+                        for (let i = 0; i < 2; i++) {
+                            for (let j = 0; j < segments[i].length; j++) {
+                                if (this[this.mode.qa][array][segments[i][j]] !== line_style) {
+                                    this.re_line(array, segments[i][j], line_style, this.undoredo_counter);
+                                }
+                            }
+                        }
+                        this.drawing_mode = draw_mode;
+                    }
+                } else if (!skip_cages) {
+                    let context = this.get_cage_context(this.cageselection[0], array);
+                    let result = this.flood_cage(this.cageselection[0], context[1], context[0], array);
+                    let not_in_cage = result[0];
+                    let found_cage = result[1];
                     this.undoredo_counter = this.undoredo_counter + 1;
-
-                    // if cage does not exist, then add to killer cages.
-                    this.record(arraykill, -1, this.undoredo_counter);
-                    this[this.mode.qa][arraykill].push(sortedcages);
-                    // let min_cell = Math.min(...this.cageselection);
-                    // let max_cell = Math.max(...this.cageselection);
-
-                    // cage cell locations
-                    for (let i = 0; i < row_size; i++) {
-                        grid_matrix[i] = new Array(parseInt(col_size)).fill(0);
-                    }
-                    for (let i = 0; i < sortedcages.length; i++) {
-                        let col_num = (sortedcages[i] % (this.nx0)) - 2;
-                        let row_num = parseInt(sortedcages[i] / this.nx0) - 2;
-                        grid_matrix[row_num][col_num] = 1;
-                    }
-
                     // remember drawing_mode
                     let draw_mode = this.drawing_mode;
                     this.drawing_mode = 100;
-
-                    // Find the corner coordinates of the cell
-                    for (let i = 0; i < sortedcages.length; i++) {
-                        let col_num = (sortedcages[i] % (this.nx0)) - 2;
-                        let row_num = parseInt(sortedcages[i] / this.nx0) - 2;
-
-                        // current cell
-                        let top_left = 4 * (sortedcages[i] + this.nx0 * this.ny0);
-                        let top_right = top_left + 1;
-                        let bottom_left = top_left + 2;
-                        let bottom_right = top_left + 3;
-
-                        // check if left cell is shared
-                        if (col_num !== 0) {
-                            if (grid_matrix[row_num][col_num - 1]) {
-
-                                // left shared cell
-                                let top_left_left = 4 * (sortedcages[i] - 1 + this.nx0 * this.ny0);
-                                let top_right_left = top_left_left + 1;
-                                let bottom_left_left = top_left_left + 2;
-                                let bottom_right_left = top_left_left + 3;
-
-                                if ((row_num !== 0) && (grid_matrix[row_num - 1][col_num - 1]) && (grid_matrix[row_num - 1][col_num])) {
-                                    // dont do anything
-                                } else {
-                                    key = (top_right_left.toString() + "," + top_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
+                    if (not_in_cage) /* Draw a 1x1 Cage */ {
+                        let segments = this.cage_for_selection(this.cageselection);
+                        for (let i = 0; i < 2; i++) {
+                            for (let j = 0; j < segments[i].length; j++) {
+                                if (this[this.mode.qa][array][segments[i][j]] !== line_style) {
+                                    this.re_line(array, segments[i][j], line_style, this.undoredo_counter);
                                 }
 
-                                if ((row_num !== row_size - 1) && (grid_matrix[row_num + 1][col_num - 1]) && (grid_matrix[row_num + 1][col_num])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right_left.toString() + "," + bottom_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (top_left.toString() + "," + bottom_left.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // left line
-                                }
                             }
-                        } else {
-                            key = (top_left.toString() + "," + bottom_left.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // left line
+                        }
+                    } else {
+                        let need_erase = true;
+                        let segments = this.cage_for_selection(found_cage);
+                        for (let i = 0; i < segments[0].length; i++) /* Try to restyle the cage */ {
+                            if (this[this.mode.qa][array][segments[0][i]] !== line_style) {
+                                this.re_line(array, segments[0][i], line_style, this.undoredo_counter);
+                                need_erase = false;
                             }
                         }
 
-                        // check if top cell is shared
-                        if (row_num !== 0) {
-                            if (grid_matrix[row_num - 1][col_num]) {
-
-                                // top shared cell
-                                let top_left_top = 4 * (sortedcages[i] - this.nx0 + this.nx0 * this.ny0);
-                                let top_right_top = top_left_top + 1;
-                                let bottom_left_top = top_left_top + 2;
-                                let bottom_right_top = top_left_top + 3;
-
-                                if ((col_num !== 0) && (grid_matrix[row_num - 1][col_num - 1]) && (grid_matrix[row_num][col_num - 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_left_top.toString() + "," + top_left.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
+                        if (need_erase) /* Same style */ {
+                            let perimeter = [];
+                            let outside = [];
+                            for (let i = 0; i < found_cage.length; i++) {
+                                let cell = found_cage[i];
+                                for (let j = 0; j < this.point[cell].adjacent.length; j++) {
+                                    if (found_cage.indexOf(this.point[cell].adjacent[j]) === -1) {
+                                        perimeter.push(cell);
+                                        outside.push(this.point[cell].adjacent[j]);
                                     }
                                 }
+                            }
+                            perimeter = [...new Set(perimeter)];
+                            outside = [...new Set(outside)];
 
-                                if ((col_num !== col_size - 1) && (grid_matrix[row_num - 1][col_num + 1]) && (grid_matrix[row_num][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right_top.toString() + "," + top_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
+                            let sub_cages = perimeter.map((x) => this.flood_cage(x, [], true, array)).map((x) => x[0] ? [] : x[1]);
+                            let sup_cages = outside.map((x) => this.flood_cage(x, this.get_cage_context(x, array)[1], this.get_cage_context(x, array)[0], array)).map((x) => x[0] ? [] : x[1]);
+
+                            let sub_result = new Set([]);
+                            let has_been_filled = false;
+                            let sup_result = new Set([]);
+                            for (let i = 0; i < sub_cages.length; i++) {
+                                let cage = sub_cages[i];
+                                if (cage.length < found_cage.length) {
+                                    let cage_segments = this.cage_for_selection(cage);
+                                    sub_result = sub_result.union(new Set(cage_segments[0].concat(cage_segments[1])));
+                                }
+                            }
+                            for (let i = 0; i < sup_cages.length; i++) {
+                                let cage = sup_cages[i];
+                                if (cage.length > 0) {
+                                    let cage_segments = this.cage_for_selection(cage);
+                                    let segments_as_set = new Set(cage_segments[0].concat(cage_segments[1]))
+                                    if (!has_been_filled) {
+                                        sup_result = segments_as_set;
+                                    } else {
+                                        sup_result = sup_result.intersection(segments_as_set);
                                     }
                                 }
-                            } else {
-                                key = (top_left.toString() + "," + top_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // top line
+                            }
+                            // When removing a cage, we want to make sure that other cages do not become invalid as a result. By taking
+                            // The intersection of all supercages and the union of all subcages, we ensure that this is the case
+                            let exclude = sub_result.union(sup_result);
+                            for (let i = 0; i < 2; i++) {
+                                for (let j = 0; j < segments[i].length; j++) {
+                                    if (this[this.mode.qa][array][segments[i][j]] !== [] && !exclude.has(segments[i][j])) {
+                                        this.re_line(array, segments[i][j], this[this.mode.qa][array][segments[i][j]], this.undoredo_counter);
+                                    }
+
                                 }
                             }
                         } else {
-                            key = (top_left.toString() + "," + top_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // top line
+                            for (let i = 0; i < segments[1].length; i++) {
+                                if (this[this.mode.qa][array][segments[1][i]] !== line_style) {
+                                    this.re_line(array, segments[1][i], line_style, this.undoredo_counter);
+                                }
                             }
                         }
-
-                        // check if right cell is shared
-                        if (col_num !== col_size - 1) {
-                            if (grid_matrix[row_num][col_num + 1]) {
-
-                                // top shared cell
-                                let top_left_right = 4 * (sortedcages[i] + 1 + this.nx0 * this.ny0);
-                                let top_right_right = top_left_right + 1;
-                                let bottom_left_right = top_left_right + 2;
-                                let bottom_right_right = top_left_right + 3;
-
-                                if ((row_num !== 0) && (grid_matrix[row_num - 1][col_num]) && (grid_matrix[row_num - 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (top_right.toString() + "," + top_left_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((row_num !== row_size - 1) && (grid_matrix[row_num + 1][col_num]) && (grid_matrix[row_num + 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right.toString() + "," + bottom_left_right.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (top_right.toString() + "," + bottom_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                                }
-                            }
-                        } else {
-                            key = (top_right.toString() + "," + bottom_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                            }
-                        }
-
-                        // check if bottom cell is shared
-                        if (row_num !== row_size - 1) {
-                            if (grid_matrix[row_num + 1][col_num]) {
-
-                                // top shared cell
-                                let top_left_bottom = 4 * (sortedcages[i] + this.nx0 + this.nx0 * this.ny0);
-                                let top_right_bottom = top_left_bottom + 1;
-                                let bottom_left_bottom = top_left_bottom + 2;
-                                let bottom_right_bottom = top_left_bottom + 3;
-
-                                if ((col_num !== 0) && (grid_matrix[row_num][col_num - 1]) && (grid_matrix[row_num + 1][col_num - 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_left.toString() + "," + top_left_bottom.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-
-                                if ((col_num !== col_size - 1) && (grid_matrix[row_num][col_num + 1]) && (grid_matrix[row_num + 1][col_num + 1])) {
-                                    // dont do anything
-                                } else {
-                                    key = (bottom_right.toString() + "," + top_right_bottom.toString());
-                                    if (this[this.mode.qa][array][key] !== line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter);
-                                    }
-                                }
-                            } else {
-                                key = (bottom_left.toString() + "," + bottom_right.toString());
-                                if (this[this.mode.qa][array][key] !== line_style) {
-                                    this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                                }
-                            }
-                        } else {
-                            key = (bottom_left.toString() + "," + bottom_right.toString());
-                            if (this[this.mode.qa][array][key] !== line_style) {
-                                this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                            }
-                        }
+                        this.drawing_mode = draw_mode;
                     }
-                    this.record_replay(arraykill, -1, this.undoredo_counter);
-
-                    // reset variables
-                    this.cageselection = [];
-                    this.selection = [];
-                    this.drawing_mode = draw_mode;
-                } else {
-                    // length 1 then delete
-                    if (sortedcages.length === 1 && !skip_cages) {
-
-                        // check which style cage exist, if same style then delete or else do nothing
-                        let top_left = 4 * (this[this.mode.qa][arraykill][cageexist_loc][0] + this.nx0 * this.ny0);
-                        let top_right = top_left + 1;
-                        let bottom_left = top_left + 2;
-                        let key1 = (top_left.toString() + "," + top_right.toString());
-                        let key2 = (top_left.toString() + "," + bottom_left.toString());
-
-                        // caveat - if both of these lines are manually removed from the cage then it won't detect the cage.
-                        if (this[this.mode.qa][array][key1] === line_style || this[this.mode.qa][array][key2] === line_style) {
-
-                            // undo redo group counter
-                            this.undoredo_counter = this.undoredo_counter + 1;
-
-                            // remember drawing_mode
-                            let draw_mode = this.drawing_mode;
-                            this.drawing_mode = 100;
-
-                            // cage cell locations
-                            for (let i = 0; i < row_size; i++) {
-                                grid_matrix[i] = new Array(parseInt(col_size)).fill(0);
-                            }
-                            for (let i = 0; i < this[this.mode.qa][arraykill][cageexist_loc].length; i++) {
-                                let col_num = (this[this.mode.qa][arraykill][cageexist_loc][i] % (this.nx0)) - 2;
-                                let row_num = parseInt(this[this.mode.qa][arraykill][cageexist_loc][i] / this.nx0) - 2;
-                                grid_matrix[row_num][col_num] = 1;
-                            }
-
-
-                            for (let i = 0; i < this[this.mode.qa][arraykill][cageexist_loc].length; i++) {
-                                let col_num = (this[this.mode.qa][arraykill][cageexist_loc][i] % (this.nx0)) - 2;
-                                let row_num = parseInt(this[this.mode.qa][arraykill][cageexist_loc][i] / this.nx0) - 2;
-
-                                // current cell
-                                let top_left = 4 * (this[this.mode.qa][arraykill][cageexist_loc][i] + this.nx0 * this.ny0);
-                                let top_right = top_left + 1;
-                                let bottom_left = top_left + 2;
-                                let bottom_right = top_left + 3;
-
-                                // check if left cell is shared
-                                if (col_num !== 0) {
-                                    if (grid_matrix[row_num][col_num - 1]) {
-
-                                        // left shared cell
-                                        let top_left_left = 4 * (this[this.mode.qa][arraykill][cageexist_loc][i] - 1 + this.nx0 * this.ny0);
-                                        let top_right_left = top_left_left + 1;
-                                        let bottom_left_left = top_left_left + 2;
-                                        let bottom_right_left = top_left_left + 3;
-                                        key = (top_right_left.toString() + "," + top_left.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                        key = (bottom_right_left.toString() + "," + bottom_left.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                    } else {
-                                        key = (top_left.toString() + "," + bottom_left.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter); // left line
-                                        }
-                                    }
-                                } else {
-                                    key = (top_left.toString() + "," + bottom_left.toString());
-                                    if (this[this.mode.qa][array][key] === line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter); // left line
-                                    }
-                                }
-
-                                // check if top cell is shared
-                                if (row_num !== 0) {
-                                    if (grid_matrix[row_num - 1][col_num]) {
-
-                                        // top shared cell
-                                        let top_left_top = 4 * (this[this.mode.qa][arraykill][cageexist_loc][i] - this.nx0 + this.nx0 * this.ny0);
-                                        let top_right_top = top_left_top + 1;
-                                        let bottom_left_top = top_left_top + 2;
-                                        let bottom_right_top = top_left_top + 3;
-                                        key = (bottom_left_top.toString() + "," + top_left.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                        key = (bottom_right_top.toString() + "," + top_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                    } else {
-                                        key = (top_left.toString() + "," + top_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter); // top line
-                                        }
-                                    }
-                                } else {
-                                    key = (top_left.toString() + "," + top_right.toString());
-                                    if (this[this.mode.qa][array][key] === line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter); // top line
-                                    }
-                                }
-
-                                // check if right cell is shared
-                                if (col_num !== col_size - 1) {
-                                    if (grid_matrix[row_num][col_num + 1]) {
-
-                                        // top shared cell
-                                        let top_left_right = 4 * (this[this.mode.qa][arraykill][cageexist_loc][i] + 1 + this.nx0 * this.ny0);
-                                        let top_right_right = top_left_right + 1;
-                                        let bottom_left_right = top_left_right + 2;
-                                        let bottom_right_right = top_left_right + 3;
-                                        key = (top_right.toString() + "," + top_left_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                        key = (bottom_right.toString() + "," + bottom_left_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                    } else {
-                                        key = (top_right.toString() + "," + bottom_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                                        }
-                                    }
-                                } else {
-                                    key = (top_right.toString() + "," + bottom_right.toString());
-                                    if (this[this.mode.qa][array][key] === line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter); // right line
-                                    }
-                                }
-
-                                // check if bottom cell is shared
-                                if (row_num !== row_size - 1) {
-                                    if (grid_matrix[row_num + 1][col_num]) {
-
-                                        // top shared cell
-                                        let top_left_bottom = 4 * (this[this.mode.qa][arraykill][cageexist_loc][i] + this.nx0 + this.nx0 * this.ny0);
-                                        let top_right_bottom = top_left_bottom + 1;
-                                        let bottom_left_bottom = top_left_bottom + 2;
-                                        let bottom_right_bottom = top_left_bottom + 3;
-                                        key = (bottom_left.toString() + "," + top_left_bottom.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                        key = (bottom_right.toString() + "," + top_right_bottom.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter);
-                                        }
-                                    } else {
-                                        key = (bottom_left.toString() + "," + bottom_right.toString());
-                                        if (this[this.mode.qa][array][key] === line_style) {
-                                            this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                                        }
-                                    }
-                                } else {
-                                    key = (bottom_left.toString() + "," + bottom_right.toString());
-                                    if (this[this.mode.qa][array][key] === line_style) {
-                                        this.re_line(array, key, line_style, this.undoredo_counter); // bottom line
-                                    }
-                                }
-                            }
-
-                            // Save the current killercage and then delete
-                            this.record(arraykill, cageexist_loc, this.undoredo_counter);
-                            this[this.mode.qa][arraykill][cageexist_loc] = [];
-                            if (UserSettings.custom_colors_on) {
-                                this[this.mode.qa + "_col"][arraykill][cageexist_loc] = [];
-                            }
-                            this.record_replay(arraykill, cageexist_loc, this.undoredo_counter);
-                            this.drawing_mode = draw_mode;
-                        }
-                    }
-                    // length > 1 do not do anything
-                    // reset variables
-                    this.cageselection = [];
-                    this.selection = [];
                 }
-
                 // reset variables
+                this.cageselection = [];
                 this.selection = [];
 
                 // Draw up cages
@@ -9718,7 +9766,7 @@ class Puzzle {
 
                 this.drawing = false;
             }
-        } else if (document.getElementById('sub_cage2').checked) {
+        } else if (document.getElementById('sub_cage2').checked) /* Free */ {
             if (this.mouse_mode === "down_left") {
                 this.drawing = true;
                 this.drawing_mode = 100;
@@ -9734,6 +9782,203 @@ class Puzzle {
                 this.last = -1;
             }
         }
+    }
+
+    // Return the cage segments given a selection
+    cage_for_selection(selection) {
+        let key;
+        let output = [[], []];
+        let cage_vertices = [];
+        let cage_edges = [];
+        let inside_vertices = [];
+        for (let i = 0; i < selection.length; i++) {
+            cage_edges = cage_edges.concat(this.point[selection[i]].neighbor);
+            cage_vertices = cage_vertices.concat(this.point[selection[i]].surround);
+        }
+        cage_edges = [...new Set(cage_edges)];
+        cage_vertices = [...new Set(cage_vertices)];
+
+        for (let i = 0; i < cage_vertices.length; i++) /* check what are the vertices that are fully contained in the cage */ {
+            if (this.point[cage_vertices[i]].neighbor.filter(val => selection.includes(val)).length == this.point[cage_vertices[i]].edge_to_vertex.length) {
+                inside_vertices.push(cage_vertices[i]);
+            }
+        }
+
+        for (let i = 0; i < cage_edges.length; i++) {
+            let edge = this.point[cage_edges[i]];
+            let cell_0_in = selection.includes(edge.neighbor[0]);
+            let cell_1_in = selection.includes(edge.neighbor[1]);
+            if (cell_0_in !== cell_1_in) {
+                let p0 = this.corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[0]];
+                let p1 = this.corner_table[cell_0_in ? edge.neighbor[0] : edge.neighbor[1]][edge.edge_to_vertex[1]];
+                key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                output[0].push(key);
+            } else if (cell_0_in && cell_1_in) {
+                for (let j = 0; j < 2; j++) {
+                    if (!inside_vertices.includes(edge.edge_to_vertex[j])) {
+                        let p0 = this.corner_table[edge.neighbor[0]][edge.edge_to_vertex[j]];
+                        let p1 = this.corner_table[edge.neighbor[1]][edge.edge_to_vertex[j]];
+                        key = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                        output[1].push(key);
+                    }
+                }
+            }
+        }
+
+        return output;
+    }
+
+    // From a given cell and context, returns [not_in_cage, cage], where not_in_cage is a boolean
+    // That is true if the cell is not in a cage, and cage is the array of all cells of the found
+    // Cage otherwise
+    flood_cage(cell, context, full, array) {
+        let found_cage = [];
+        let cage_queue = [cell];
+        let not_in_cage = false;
+        while (cage_queue.length > 0) {
+            let cell = cage_queue.shift();
+            found_cage.push(cell);
+            if (this.cell_outside(cell) || !this.corner_table[cell]) {
+                not_in_cage = true;
+                break;
+            }
+            if (!!this.point[cell].neighbor) {
+                for (let i = 0; i < this.point[cell].neighbor.length; i++) {
+                    let edge = this.point[cell].neighbor[i];
+                    let p0 = this.corner_table[cell][this.point[edge].edge_to_vertex[0]];
+                    let p1 = this.corner_table[cell][this.point[edge].edge_to_vertex[1]];
+                    let inner_cage_edge = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                    if (!this[this.mode.qa][array][inner_cage_edge]) {
+                        if (this.point[edge].neighbor.length === 2) {
+                            let outer_cell = this.point[edge].neighbor[0] == cell ? this.point[edge].neighbor[1] : this.point[edge].neighbor[0];
+                            if ((full || context.indexOf(outer_cell) !== -1)) {
+                                if (cage_queue.indexOf(outer_cell) === -1 && found_cage.indexOf(outer_cell) === -1) {
+                                    cage_queue.push(outer_cell);
+                                }
+                            } else {
+                                not_in_cage = true;
+                                break;
+                            }
+                        } else {
+                            not_in_cage = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        let output = [not_in_cage, found_cage];
+        return output;
+    }
+
+    get_cage_context(cell, array) {
+        // Find the "context" of the cell. That is, the smallest region that is fully defined
+        // by cage segments on the outside of it. As an example:
+        // AAAA
+        // A-xA
+        // A-AA
+        // AAA-
+        // If A is a cage, the context of x is the two - cells fully surrounded by As, plus x
+        let full = false;
+        let context = [];
+        let flood_queue = [];
+        let outsides = [];
+        flood_queue.push(cell);
+        while (flood_queue.length > 0) {
+            let cell = flood_queue.shift();
+            context.push(cell);
+            if (this.cell_outside(cell)) {
+                full = true;
+                break;
+            }
+            if (!!this.point[cell]) {
+                for (let i = 0; i < this.point[cell].neighbor.length; i++) {
+                    let edge = this.point[cell].neighbor[i];
+                    if (this.point[edge].neighbor.length === 1) /* Reached the outside */{
+                        full = true;
+                        break;
+                    } else {
+                        let outer_cell = this.point[edge].neighbor[0] == cell ? this.point[edge].neighbor[1] : this.point[edge].neighbor[0];
+                        if (flood_queue.indexOf(outer_cell) === -1 && context.indexOf(outer_cell) === -1) {
+                            if (!this.corner_table[outer_cell]) {
+                                full = true;
+                                break;
+                            }
+                            let p0 = this.corner_table[outer_cell][this.point[edge].edge_to_vertex[0]];
+                            let p1 = this.corner_table[outer_cell][this.point[edge].edge_to_vertex[1]];
+                            let outer_cage_edge = (Math.min(p0, p1).toString() + "," + Math.max(p0, p1).toString());
+                            if (!this[this.mode.qa][array][outer_cage_edge]) {
+                                this.remove_from_array(outsides, outer_cell);
+                                flood_queue.push(outer_cell);
+                            } else {
+                                outsides.push(outer_cell);
+                            }
+                        }
+                    }
+                }
+                if (full) {
+                    break;
+                }
+            }
+        }
+        if (!full) {
+            // The context should not contain any holes. For every cell in outsides, we check if we can reach
+            // the outside of the grid. If we cannot, we add the hole defined by that cell to the context
+            while (outsides.length > 0) {
+                let temp_queue = [outsides.shift()];
+                let temp_area = [];
+                let reached_outside = false;
+                while (temp_queue.length > 0) {
+                    let cell = temp_queue.shift();
+                    temp_area.push(cell);
+                    if (this.cell_outside(cell) || !this.corner_table[cell]) {
+                        reached_outside = true;
+                        break;
+                    }
+                    if (!!this.point[cell].neighbor) {
+                        for (let i = 0; i < this.point[cell].neighbor.length; i++) {
+                            let edge = this.point[cell].neighbor[i];
+                            if (this.point[edge].neighbor.length === 1) /* Reached the outside */{
+                                reached_outside = true;
+                                break;
+                            } else {
+                                let outer_cell = this.point[edge].neighbor[0] == cell ? this.point[edge].neighbor[1] : this.point[edge].neighbor[0];
+                                if (context.indexOf(outer_cell) === -1) {
+                                    if (temp_queue.indexOf(outer_cell) === -1 && temp_area.indexOf(outer_cell) === -1) {
+                                        temp_queue.push(outer_cell);
+                                    }
+                                    this.remove_from_array(outsides, outer_cell);
+                                }
+                            }
+                        }
+                        if (reached_outside) {
+                            break;
+                        }
+                    }
+                }
+                if (!reached_outside) {
+                    context = context.concat(temp_area);
+                }
+            }
+        }
+        let output = [full, context];
+        return output;
+    }
+
+    // Returns true if a cell is partly outside
+    cell_outside(cell) {
+        if (!cell) {
+            return true;
+        }
+        for (let i = 0; i < this.point[cell].surround.length; i++) {
+            if (!this.between_points({x: -1, y: -1}, {
+                x: this.canvasx + 1,
+                y: this.canvasy + 1
+            }, this.point[this.point[cell].surround[i]])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     re_linecage(num) {
@@ -9757,19 +10002,19 @@ class Puzzle {
         if (this.mouse_mode === "down_left") {
             if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
                 this.re_polygondown(num);
-            } else if (this.point[num].type === 0) {
+            } else if (this.types[0].indexOf(this.point[num].type) !== -1) {
                 this.re_specialdown(num, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
             }
         } else if (this.mouse_mode === "move") {
             if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] === "polygon") {
                 this.re_polygonmove(num);
-            } else if (this.drawing && this.point[num].type === 0 && num != this.last) {
+            } else if (this.drawing && this.types[0].indexOf(this.point[num].type) !== -1 && num != this.last) {
                 this.re_special(num, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
             }
         } else if (this.mouse_mode === "up") {
             if (this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0] != "polygon") {
                 if (this.point[num].use === 1) {
-                    if (this.point[num].type === 0) {
+                    if (this.types[0].indexOf(this.point[num].type) !== -1) {
                         this.re_specialup(num, this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][0]);
                     }
                 }
@@ -10487,7 +10732,7 @@ class Puzzle {
     }
 
     re_combi_shaka(x, y, num) {
-        if (this.point[num].type === 0) {
+        if (this.types[0].indexOf(this.point[num].type) !== -1) {
             this.last = num;
             this.lastx = x;
             this.lasty = y;
@@ -10517,7 +10762,7 @@ class Puzzle {
     }
 
     re_combi_shaka_up(num) {
-        if (this.point[num].type === 0 && this.last === num) {
+        if (this.types[0].indexOf(this.point[num].type) !== -1 && this.last === num) {
             if (!this[this.mode.qa].symbol[num] || (this[this.mode.qa].symbol[num] && this[this.mode.qa].symbol[num][1] === "tri")) {
                 this.record("symbol", num);
                 this[this.mode.qa].symbol[num] = [8, "ox_B", 2];
@@ -10543,7 +10788,7 @@ class Puzzle {
     re_combi_linex_move(num) {
         if (this.drawing_mode != -1 &&
             this.mouse_click !== 2 &&
-            this.point[num].type === 0) {
+            this.types[0].indexOf(this.point[num].type) !== -1) {
             let line_style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
             var array;
             if (this.point[num].adjacent.indexOf(parseInt(this.last)) != -1) {
@@ -10553,7 +10798,7 @@ class Puzzle {
             }
             this.last = num;
             this.redraw();
-        } else if ((this.point[num].type === 2 || this.point[num].type === 3) && (this.ondown_key === "mousedown")) {
+        } else if ((this.types[2].indexOf(this.point[num].type) !== -1) && (this.ondown_key === "mousedown")) {
             if (this.drawing_mode == 52) {
                 if (!this[this.mode.qa].line[num]) { // Insert cross
                     this.record("line", num);
@@ -10578,7 +10823,7 @@ class Puzzle {
     }
 
     re_combi_lineox_move(num) {
-        if (this.drawing_mode != -1 && this.point[num].type === 0) {
+        if (this.drawing_mode != -1 && this.types[0].indexOf(this.point[num].type) !== -1) {
             let line_style = this.mode[this.mode.qa][this.mode[this.mode.qa].edit_mode][1];
             var array;
             if (this.point[num].adjacent.indexOf(parseInt(this.last)) != -1) {
@@ -10604,7 +10849,7 @@ class Puzzle {
             secondsymbol = [1, "ox_E", 2];
         }
 
-        if (this.point[num].type === 0 && this.last === num && this.first === num && !this.linedrawing) {
+        if (this.types[0].indexOf(this.point[num].type) !== -1 && this.last === num && this.first === num && !this.linedrawing) {
             if (!this[this.mode.qa].symbol[num]) {
                 this.record("symbol", num);
                 this[this.mode.qa].symbol[num] = firstsymbol;
@@ -11311,7 +11556,7 @@ class Puzzle {
 
     re_combi_akari_up_reduced(num) {
         if (this.point[num].type === 0 && this.last === num && this.first === num) {
-            if (!this[this.mode.qa].surface[num] && !this[this.mode.qa].symbol[num]) {
+            if (!this[this.mode.qa].symbol[num]) {
                 this.record("symbol", num);
                 this[this.mode.qa].symbol[num] = [3, "sun_moon", 2];
                 this.record_replay("symbol", num);
@@ -12361,7 +12606,7 @@ class Puzzle {
             if (this.bg_image_data.foreground)
                 this.draw_bg_image();
         }
-        // don't crash the UI
+            // don't crash the UI
         catch (err) {
             console.error(err);
         }
@@ -12417,7 +12662,7 @@ class Puzzle {
 
     draw_polygonsp(pu) {
         for (var i = 0; i < this[pu].polygon.length; i++) {
-            if (this[pu].polygon[i][0]) {
+            if (this[pu].polygon[i][0] != null) {
                 this.ctx.setLineDash([]);
                 this.ctx.lineCap = "square";
                 if (UserSettings.custom_colors_on && this[pu + "_col"].polygon[i]) {
@@ -12612,7 +12857,7 @@ class Puzzle {
     draw_cursol() {
         let edit_mode = this.mode[this.mode.qa].edit_mode;
         /*cursol*/
-        if ((edit_mode === "number" && !this.number_multi_enabled()) || edit_mode === "symbol") {
+        if (((edit_mode === "number" && !this.number_multi_enabled()) || edit_mode === "symbol") && this.point[this.cursol]) {
             set_line_style(this.ctx, 99);
             if (edit_mode === "symbol" && UserSettings.panel_shown && !pu.onoff_symbolmode_list[pu.mode[this.mode.qa].symbol[0]]) {
                 this.ctx.strokeStyle = Color.BLUE_DARK_VERY;
@@ -12620,7 +12865,7 @@ class Puzzle {
             this.ctx.fillStyle = Color.TRANSPARENTBLACK;
             let submode = this.mode[this.mode.qa][edit_mode][0];
             if (edit_mode === "number" && (submode === "3" || submode === "9")) {
-                if (this.cursolS) {
+                if (this.cursolS && this.point[this.cursolS]) {
                     this.draw_polygon(this.ctx, this.point[this.cursolS].x, this.point[this.cursolS].y, 0.2, 4, 45);
                 } else {
                     this.default_cursol();
@@ -12673,156 +12918,458 @@ class Puzzle {
             //        this.selection.push(this.cursol);
             //    }
             // }
+            this.ctx.shadowBlur = 10;
+            this.ctx.shadowColor = Color.ORANGE_TRANSPARENT;
+            let irregular = false;
+            let total_radius, radius;
+            let offset = 3.7;
 
-            // Handling rotation and reflection of the grid
-            var a = [0, 1, 2, 3],
-                c;
-            if (this.theta === 90) { a = [3, 0, 1, 2]; } else if (this.theta === 180) { a = [2, 3, 0, 1]; } else if (this.theta === 270) { a = [1, 2, 3, 0]; }
-            if (this.reflect[0] === -1) {
-                c = a[0];
-                a[0] = a[1];
-                a[1] = c;
-                c = a[2];
-                a[2] = a[3];
-                a[3] = c;
+            let regulars = ["square", "hex", "tri", "pyramid", "iso", "cairo_pentagonal", "sudoku", "kakuro", "tetrakis_square", "deltaoidal_trihexagonal"];
+            set_line_style(this.ctx, 101);
+
+            if (regulars.indexOf(this.gridtype) !== -1 && !!this.selection[0]) { // If all cells are the same shape, no need to recompute
+                let stop = false;
+                for (var k of this.selection) {
+                    if (this.point[k].type == 0 && !stop) {
+                        total_radius = Math.sqrt((this.point[k].x - ((this.point[this.point[k].surround[0]].x) + (this.point[this.point[k].surround[1]].x)) * 0.5) ** 2 +
+                            (this.point[k].y - ((this.point[this.point[k].surround[0]].y) + (this.point[this.point[k].surround[1]].y)) * 0.5) ** 2);
+                        radius = (total_radius - offset) / total_radius;
+                        stop = true;
+                    }
+                }
+            } else {
+                irregular = true;
             }
-            if (this.reflect[1] === -1) {
-                c = a[0];
-                a[0] = a[3];
-                a[3] = c;
-                c = a[1];
-                a[1] = a[2];
-                a[2] = c;
-            }
+
             for (var k of this.selection) {
-                let factor, offset;
-                if (this.grid_is_square()) {
-                    factor = parseInt(k / (this.nx0 * this.ny0));
-                    offset = 3;
-                } else if (this.gridtype === "iso") {
-                    factor = 0;
-                    offset = 0;
-                } else if (this.gridtype === "tetrakis_square" || this.gridtype === "cairo_pentagonal" || this.gridtype === "rhombitrihexagonal" || this.gridtype === "deltoidal_trihexagonal" || this.gridtype === "penrose_P3") {
-                    factor = 0;
-                    offset = 0;
-                } else {
-                    factor = 2;
-                }
-                // Color of selected cell
-                // set_surface_style(this.ctx, 13);
+                if (this.point[k].type !== 0) { // Edge or Vertex
+                    this.ctx.fillStyle = Color.TRANSPARENTBLACK;
+                    this.ctx.lineWidth = 2;
 
-                // Shadow for the selected cell
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = Color.ORANGE_TRANSPARENT;
-                // Border outline for the selected cell
-                set_line_style(this.ctx, 101);
-                if (factor < 1) {
+                    this.draw_circle(this.ctx, this.point[k].x, this.point[k].y, 0.15);
+                } else { // Standard Cell
+                    let cell = this.point[k];
+                    if (irregular) {
+                        total_radius = Math.sqrt((cell.x - ((this.point[cell.surround[0]].x) + (this.point[cell.surround[1]].x)) * 0.5) ** 2 +
+                            (cell.y - ((this.point[cell.surround[0]].y) + (this.point[cell.surround[1]].y)) * 0.5) ** 2);
+                        radius = (total_radius - offset) / total_radius;
+                    }
+
                     this.ctx.beginPath();
-                    for (var j = 0; j < this.point[k].surround.length; j++) {
-                        switch (j) {
-                            case 0:
-                                this.ctx.moveTo(this.point[this.point[k].surround[a[0]]].x + offset, this.point[this.point[k].surround[a[0]]].y + offset);
-                                break;
-                            case 1:
-                                this.ctx.lineTo(this.point[this.point[k].surround[a[1]]].x - offset, this.point[this.point[k].surround[a[1]]].y + offset);
-                                break;
-                            case 2:
-                                this.ctx.lineTo(this.point[this.point[k].surround[a[2]]].x - offset, this.point[this.point[k].surround[a[2]]].y - offset);
-                                break;
-                            case 3:
-                                this.ctx.lineTo(this.point[this.point[k].surround[a[3]]].x + offset, this.point[this.point[k].surround[a[3]]].y - offset);
-                                break;
-                            case 4:
-                                // only useful and hard coded for cairo_pentagonal
-                                this.ctx.lineTo(this.point[this.point[k].surround[4]].x + offset, this.point[this.point[k].surround[4]].y - offset);
-                                break;
-                        }
+                    this.ctx.moveTo(cell.x * (1 - radius) + this.point[cell.surround[0]].x * radius,
+                        cell.y * (1 - radius) + this.point[cell.surround[0]].y * radius);
+
+                    for (var j = 0; j < cell.surround.length - 1; j++) {
+                        this.ctx.lineTo(cell.x * (1 - radius) + this.point[cell.surround[j + 1]].x * radius,
+                            cell.y * (1 - radius) + this.point[cell.surround[j + 1]].y * radius);
                     }
                     this.ctx.closePath();
-                    // this.ctx.fill();
+                    this.ctx.stroke();
+                }
+            }
+
+            this.ctx.shadowBlur = 0;
+            this.ctx.shadowColor = Color.TRANSPARENTBLACK;
+        }
+    }
+
+    draw_cage(pu) {
+        let r = 0.17;
+        // Below are the list of grids that will "smartly" combine corners to draw
+        let smarts = ["tri", "tetrakis_square", "deltoidal_trihexagonal", "penrose_P3", "rhombitrihexagonal"];
+        if (smarts.indexOf(this.gridtype) === -1) {
+            for (var i in this[pu].cage) {
+                var i1 = i.split(",")[0];
+                var i2 = i.split(",")[1];
+                // Corners in same cell, simply connect them with a line
+                if (this.point[i1].neighbor[0] == this.point[i2].neighbor[0]) {
+                    set_line_style(this.ctx, this[pu].cage[i]);
+                    if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
+                        this.ctx.strokeStyle = this[pu + "_col"].cage[i];
+                    }
+                    let p1 = this.get_cage_coordinates(i1, r);
+                    let p2 = this.get_cage_coordinates(i2, r);
+                    let intersect = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(intersect[0], intersect[1]);
+                    this.ctx.lineTo(p1[0], p1[1]);
+                    this.ctx.stroke();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(intersect[0], intersect[1]);
+                    this.ctx.lineTo(p2[0], p2[1]);
+                    this.ctx.stroke();
+                }
+                // Corners in adjacent cells, find intersection of the side lines and connect corners to intersection
+                else {
+                    if (this.point[i1].surround[0] != this.point[i2].surround[0]) {
+                        // If this is printed, something has gone wrong
+                        console.log("Cage corners that should not be connected are connected");
+                        continue;
+                    }
+                    let vertex = this.point[i1].surround[0];
+                    // The corners are next to a pair of edges within their cell. If two corners are connected and are in different cells, the line should pass
+                    // through one of these edge (same for both corners). Find the other edge of the pair (different for both corners), find the other vertex
+                    // that is incident to that edge and find the corner that corresponds to that other vertex and face combination
+                    let k1 = 0;
+                    let k2 = 0;
+                    for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
+                        if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0]) &&
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
+                            k1 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
+                        }
+                        if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0]) &&
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
+                            k2 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
+                        }
+                    }
+                    let j1 = this.corner_table[this.point[i1].neighbor[0]][k1];
+                    let j2 = this.corner_table[this.point[i2].neighbor[0]][k2];
+                    // i1-j1 and i2-j2 can define lines. Find the intersection of both lines, and connect the intersection to i1, then the intersection to i2
+                    let pi1 = this.get_cage_coordinates(i1, r);
+                    let pi2 = this.get_cage_coordinates(i2, r);
+                    let pj1, pj2, denom;
+                    let skip = false;
+                    let intersect = [];
+                    if (!this.point[j1] || !this.point[j2]) {
+                        // Cannot find the other points for some reason
+                        skip = true;
+                        denom = 0;
+                    }
+                    if (!skip) {
+                        pj1 = this.get_cage_coordinates(j1, r);
+                        pj2 = this.get_cage_coordinates(j2, r);
+                        denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
+                    }
+                    if (Math.abs(denom) < 0.0001) {
+                        // Undefined intersection, just take midpoint
+                        intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];
+                    } else {
+                        let deltY = pi1[1] - pi2[1];
+                        let deltX = pi1[0] - pi2[0];
+                        let numer = ((pj2[0] - pi2[0]) * deltY) - ((pj2[1] - pi2[1]) * deltX);
+                        let coeff = numer / denom;
+                        intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
+                    }
+                    set_line_style(this.ctx, this[pu].cage[i] + 100);
+                    if (UserSettings.custom_colors_on && this[pu + "_col"].cage[i]) {
+                        this.ctx.strokeStyle = this[pu + "_col"].cage[i];
+                    }
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pi1[0], pi1[1]);
+                    this.ctx.lineTo(intersect[0], intersect[1]);
+                    this.ctx.stroke();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(pi2[0], pi2[1]);
+                    this.ctx.lineTo(intersect[0], intersect[1]);
+                    this.ctx.stroke();
+                }
+            }
+        } else {
+            let cages = this.process_for_drawing(this.preprocess_cage(this[pu].cage), pu);
+            for (let i = 0; i < cages[0].length; i++) {
+                let i1 = cages[0][i][0];
+                let i2 = cages[0][i][1];
+                let key = (Math.min(i1, i2).toString() + "," + Math.max(i1, i2).toString());
+                set_line_style(this.ctx, this[pu].cage[key]);
+                if (UserSettings.custom_colors_on && this[pu + "_col"].cage[key]) {
+                    this.ctx.strokeStyle = this[pu + "_col"].cage[key];
+                }
+                let p1 = this.get_cage_coordinates(i1, r);
+                let p2 = this.get_cage_coordinates(i2, r);
+                let intersect = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+                this.ctx.beginPath();
+                this.ctx.moveTo(intersect[0], intersect[1]);
+                this.ctx.lineTo(p1[0], p1[1]);
+                this.ctx.stroke();
+                this.ctx.beginPath();
+                this.ctx.moveTo(intersect[0], intersect[1]);
+                this.ctx.lineTo(p2[0], p2[1]);
+                this.ctx.stroke();
+            }
+            for (let i = 0; i < cages[1].length; i++) {
+                let s1 = cages[1][i][0];
+                let s2 = cages[1][i][1];
+                let points = [];
+                let key = (Math.min(s1, s2).toString() + "," + Math.max(s1, s2).toString());
+                set_line_style(this.ctx, this[pu].cage[key]);
+                if (UserSettings.custom_colors_on && this[pu + "_col"].cage[key]) {
+                    this.ctx.strokeStyle = this[pu + "_col"].cage[key];
+                }
+                for (let j = 0; j < cages[1][i].length - 1; j++) {
+                    let i1 = cages[1][i][j];
+                    let i2 = cages[1][i][j + 1];
+                    if (this.point[i1].surround[0] != this.point[i2].surround[0]) {
+                        // If this is printed, something has gone wrong
+                        console.log("Cage corners that should not be connected are connected");
+                        continue;
+                    }
+                    let vertex = this.point[i1].surround[0];
+                    // The corners are next to a pair of edges within their cell. If two corners are connected and are in different cells, the line should pass
+                    // through one of these edge (same for both corners). Find the other edge of the pair (different for both corners), find the other vertex
+                    // that is incident to that edge and find the corner that corresponds to that other vertex and face combination
+                    let k1 = 0;
+                    let k2 = 0;
+                    for (let j = 0; j < this.point[vertex].edge_to_vertex.length; j++) {
+                        if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0]) &&
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0])) {
+                            k1 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
+                        }
+                        if (this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i2].neighbor[0]) &&
+                            !this.point[this.point[vertex].edge_to_vertex[j]].neighbor.includes(this.point[i1].neighbor[0])) {
+                            k2 = this.point[this.point[vertex].edge_to_vertex[j]].edge_to_vertex.filter(v => v != vertex)[0];
+                        }
+                    }
+                    let j1 = this.corner_table[this.point[i1].neighbor[0]][k1];
+                    let j2 = this.corner_table[this.point[i2].neighbor[0]][k2];
+                    // i1-j1 and i2-j2 can define lines. Find the intersection of both lines, and connect the intersection to i1, then the intersection to i2
+                    let pi1 = this.get_cage_coordinates(i1, r);
+                    let pi2 = this.get_cage_coordinates(i2, r);
+                    let pj1 = this.get_cage_coordinates(j1, r);
+                    let pj2 = this.get_cage_coordinates(j2, r);
+                    let intersect = [];
+
+                    let denom = ((pj2[1] - pi2[1]) * (pj1[0] - pi1[0])) - ((pj2[0] - pi2[0]) * (pj1[1] - pi1[1]));
+                    if (Math.abs(denom) < 0.0001) {
+                        // Undefined intersection, just take midpoint
+                        intersect = [(pi1[0] + pi2[0]) / 2, (pi1[1] + pi2[1]) / 2];
+                    } else {
+                        let deltY = pi1[1] - pi2[1];
+                        let deltX = pi1[0] - pi2[0];
+                        let numer = ((pj2[0] - pi2[0]) * deltY) - ((pj2[1] - pi2[1]) * deltX);
+                        let coeff = numer / denom;
+                        intersect = [pi1[0] + (coeff * (pj1[0] - pi1[0])), pi1[1] + (coeff * (pj1[1] - pi1[1]))];
+                    }
+                    if (j === 0) {
+                        points.push(pi1);
+                    }
+                    points.push(intersect);
+                    if (j === cages[1][i].length - 2) {
+                        points.push(pi2);
+                    }
+                }
+                if (points.length == 3) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(points[1][0], points[1][1]);
+                    this.ctx.lineTo(points[0][0], points[0][1]);
+                    this.ctx.stroke();
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(points[1][0], points[1][1]);
+                    this.ctx.lineTo(points[2][0], points[2][1]);
                     this.ctx.stroke();
                 } else {
-                    let r, n, th;
-                    let tol = 0.01; // error tolerance
-                    if (this.grid_is_square()) {
-                        r = 0.2;
-                        n = 4;
-                        th = 45;
-                    } else if (this.gridtype === "hex") {
-                        r = 0.45;
-                        n = 6;
-                        th = 30 + this.theta;
-                    } else if (this.gridtype === "tri") {
-                        r = 0.5;
-                        n = 3;
-                        if (parseInt(k / (this.n0) ** 2) === 1) {
-                            th = 90;
-                        } else if (parseInt(k / (this.n0) ** 2) === 2) {
-                            th = 150;
-                        }
-                    } else if (this.gridtype === "pyramid") {
-                        r = 0.6;
-                        n = 4;
-                        th = 45;
-                    } else if (this.gridtype === "truncated_square") {
-                        if (parseInt(k % 2) === 0) { // Even numbers are octa shape, odd numbers are square shape
-                            r = 0.65;
-                            n = 8;
-                            th = 22.5;
+                    for (let j = 0; j < points.length - 1; j++) {
+                        let p1 = points[j];
+                        let p2 = points[j + 1];
+                        if (j === 0) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p1[0], p1[1]);
+                            this.ctx.lineTo(p2[0], p2[1]);
+                            this.ctx.stroke();
+                        } else if (j === points.length - 2) {
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p2[0], p2[1]);
+                            this.ctx.lineTo(p1[0], p1[1]);
+                            this.ctx.stroke();
                         } else {
-                            r = 0.3;
-                            n = 4;
-                            th = 45;
-                        }
-                    } else if (this.gridtype === "snub_square") {
-                        if (this.point[k].surround.length === 3) { // Even numbers are octa shape, odd numbers are square shape
-                            if (Math.abs(this.point[this.point[k].surround[a[0]]].y - this.point[this.point[k].surround[a[1]]].y) <= tol) {
-                                r = 0.4;
-                                n = 3;
-                                th = 90;
-                            } else if (Math.abs(this.point[this.point[k].surround[a[0]]].x - this.point[this.point[k].surround[a[2]]].x) <= tol) {
-                                r = 0.4;
-                                n = 3;
-                                th = 0;
-                            } else if (Math.abs(this.point[this.point[k].surround[a[1]]].y - this.point[this.point[k].surround[a[2]]].y) <= tol) {
-                                r = 0.4;
-                                n = 3;
-                                th = 30;
-                            } else {
-                                r = 0.4;
-                                n = 3;
-                                th = 60;
-                            }
-                        } else if (this.point[k].surround.length === 4) {
-                            if (Math.abs(this.point[this.point[k].surround[a[0]]].y - this.point[this.point[k].surround[a[1]]].y) <= tol) {
-                                r = 0.6;
-                                n = 4;
-                                th = 45;
-                            } else {
-                                r = 0.6;
-                                n = 4;
-                                th = 105;
-                            }
+                            let intersect = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p1[0], p1[1]);
+                            this.ctx.lineTo(intersect[0], intersect[1]);
+                            this.ctx.stroke();
+                            this.ctx.beginPath();
+                            this.ctx.moveTo(p2[0], p2[1]);
+                            this.ctx.lineTo(intersect[0], intersect[1]);
+                            this.ctx.stroke();
                         }
                     }
-                    let x = this.point[k].x;
-                    let y = this.point[k].y
-
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x - r * Math.cos(th * (Math.PI / 180)) * this.size, y - r * Math.sin(th * (Math.PI / 180)) * this.size);
-                    for (var i = 0; i < n - 1; i++) {
-                        th += 360 / n;
-                        this.ctx.lineTo(x - r * Math.cos(th * (Math.PI / 180)) * this.size, y - r * Math.sin(th * (Math.PI / 180)) * this.size);
-                    }
-                    this.ctx.closePath();
-                    this.ctx.stroke();
                 }
-
-                // Reset Bluring
-                this.ctx.shadowBlur = 0;
-                this.ctx.shadowColor = Color.TRANSPARENTBLACK;
             }
         }
+    }
+
+    get_cage_coordinates(corner, radius) {
+        let regulars = ["square", "hex", "tri", "pyramid", "iso", "cairo_pentagonal", "sudoku", "kakuro", "tetrakis_square", "deltoidal_trihexagonal", "penrose_P3"];
+        let cell = this.point[corner].neighbor[0];
+        let vertex = this.point[corner].surround[0];
+        if (regulars.indexOf(this.gridtype) !== -1) {
+            return [radius * this.point[cell].x + (1 - radius) * this.point[vertex].x, radius * this.point[cell].y + (1 - radius) * this.point[vertex].y];
+        }
+        let inward = [this.point[vertex].x - this.point[cell].x, this.point[vertex].y - this.point[cell].y];
+        let length = Math.sqrt(inward[0] ** 2 + inward[1] ** 2);
+        inward = [inward[0] / length, inward[1] / length];
+
+        return [this.point[vertex].x - 0.5 * radius * this.size * inward[0], this.point[vertex].y - 0.5 * radius * this.size * inward[1]];
+    }
+
+    // Given a cage state, split the state into paths and loops so cages can be drawn "smartly". Unused for now
+    preprocess_cage(cage) {
+        let output = [];
+        let neighbors = [];
+        for (var i in cage) {
+            if (!neighbors[i.split(",")[0]])
+                neighbors[i.split(",")[0]] = []
+            if (!neighbors[i.split(",")[1]])
+                neighbors[i.split(",")[1]] = []
+            neighbors[i.split(",")[0]].push(i.split(",")[1]);
+            neighbors[i.split(",")[1]].push(i.split(",")[0]);
+        }
+
+        for (var i in neighbors) {
+            let children = [];
+            if (neighbors[i].length > 2) {
+                children.push(i);
+                while (children.length > 0) {
+                    let subchildren = [];
+                    while (children.length > 0) {
+                        let j = children.shift();
+                        if (!!neighbors[j]) {
+                            for (let k = 0; k < neighbors[j].length; k++) {
+                                let neighbor = neighbors[j][k]
+                                output.push([Math.min(neighbor, j), Math.max(neighbor, j)]);
+                                this.remove_from_array(neighbors[neighbor], j);
+                                if (neighbors[neighbor].length > 1)
+                                    subchildren.push(neighbor);
+                            }
+                            neighbors[j] = [];
+                        }
+                    }
+                    children = subchildren;
+                }
+            }
+        }
+
+        for (var i in neighbors) {
+            let path = [];
+            if (neighbors[i].length == 1) {
+                let j = i;
+                while (!!neighbors[j]) {
+                    path.push(parseInt(j));
+                    let k = neighbors[j][0];
+                    neighbors[j] = [];
+                    this.remove_from_array(neighbors[k], j);
+                    j = k;
+                }
+                output.push(path);
+            }
+        }
+
+        for (var i in neighbors) {
+            let path = [];
+            if (neighbors[i].length == 2) {
+                let j = i;
+                while (!!neighbors[j]) {
+                    path.push(parseInt(j));
+                    let k = neighbors[j][0];
+                    neighbors[j] = [];
+                    this.remove_from_array(neighbors[k], j);
+                    j = k;
+                }
+                output.push(path);
+            }
+        }
+        return output;
+    }
+
+
+    remove_from_array(arr, val) {
+        if (!!arr) {
+            if (arr.indexOf(val) !== -1) {
+                arr.splice(arr.indexOf(val), 1);
+            }
+        }
+    }
+
+
+    process_for_drawing(cage, pu) {
+        let output = [];
+        output[0] = []; // Inside the same cell
+        output[1] = []; // Not inside the same cell, with same style grouped
+        for (let i = 0; i < cage.length; i++) {
+            let temp = [];
+            let style = -1;
+            if (cage[i][0] == cage[i][cage[i].length - 1]) /* Loop */ {
+                let offset = -1;
+                for (let j = 0; j < cage[i].length - 1; j++) /* Find the first pair of corner in same cell */ {
+                    if (this.point[cage[i][j]].neighbor[0] == this.point[cage[i][(j + 1)]].neighbor[0]) {
+                        offset = offset === -1 ? j : offset;
+                    }
+                }
+                if (offset === -1) /* This must be a loop around a vertex, put everything separately */{
+                    for (let j = 0; j < cage[i].length - 1; j++) {
+                        if (this.point[cage[i][j]].neighbor == this.point[cage[i][j + 1]].neighbor) {
+                            output[0].push([cage[i][j], cage[i][j + 1]]);
+                        } else {
+                            output[1].push([cage[i][j], cage[i][j + 1]]);
+                        }
+                    }
+                } else {
+                    for (let j = 0; j < cage[i].length - 1; j++) /* Found a candidate to offset, since it is a loop we can start anywhere */ {
+                        let k1 = (j + offset) % (cage[i].length - 1);
+                        let k2 = (j + offset + 1) % (cage[i].length - 1);
+                        if (this.point[cage[i][k1]].neighbor[0] == this.point[cage[i][k2]].neighbor[0]) /* Same cell */{
+                            if (temp.length > 0)
+                                output[1].push(temp);
+                            temp = [];
+                            style = -1;
+                            output[0].push([cage[i][k1], cage[i][k2]]);
+                        } else {
+                            let key = (Math.min(cage[i][k1], cage[i][k2]).toString() + "," + Math.max(cage[i][k1], cage[i][k2]).toString());
+                            let current_style = this[pu].cage[key] + 100;
+                            if (UserSettings.custom_colors_on && this[pu + "_col"].cage[key]) {
+                                current_style = this[pu + "_col"].cage[key];
+                            }
+                            if (style === -1) /* temp must be empty */{
+                                style = current_style;
+                                temp.push(cage[i][k1]);
+                                temp.push(cage[i][k2]);
+                            } else if (style === current_style) /* Same style, combine */{
+                                temp.push(cage[i][k2]);
+                            } else {
+                                style = current_style;
+                                output[1].push(temp);
+                                temp = [];
+                                temp.push(cage[i][k1]);
+                                temp.push(cage[i][k2]);
+                            }
+                        }
+                    }
+                    if (temp.length > 0)
+                        output[1].push(temp);
+                }
+            } else {
+                for (let j = 0; j < cage[i].length - 1; j++) {
+                    if (this.point[cage[i][j]].neighbor[0] == this.point[cage[i][j + 1]].neighbor[0]) {
+                        if (temp.length > 0)
+                            output[1].push(temp);
+                        temp = [];
+                        style = -1;
+                        output[0].push([cage[i][j], cage[i][j + 1]]);
+                    } else {
+                        let key = (Math.min(cage[i][j], cage[i][j + 1]).toString() + "," + Math.max(cage[i][j], cage[i][j + 1]).toString());
+                        let current_style = this[pu].cage[key] + 100;
+                        if (UserSettings.custom_colors_on && this[pu + "_col"].cage[key]) {
+                            current_style = this[pu + "_col"].cage[key];
+                        }
+                        if (style === -1) {
+                            style = current_style;
+                            temp.push(cage[i][j]);
+                            temp.push(cage[i][j + 1]);
+                        } else if (style === current_style) {
+                            temp.push(cage[i][j + 1]);
+                        } else {
+                            style = current_style;
+                            output[1].push(temp);
+                            temp = [];
+                            temp.push(cage[i][j]);
+                            temp.push(cage[i][j + 1]);
+                        }
+                    }
+                }
+                if (temp.length > 0)
+                    output[1].push(temp);
+            }
+        }
+        return output;
     }
 
     check_solution() {
